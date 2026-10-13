@@ -70,12 +70,12 @@
 <div class="extract-content">
 <div class="extract-drop" id="extractDrop">
 <div class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="m4 7.5 8 4.7 8-4.7M12 12.2V21"/></svg></div>
-<div class="extract-copy"><strong>Extract a .zhip or .zip file</strong><span>Choose an archive to inspect its contents and download extracted files. Files stay on your device.</span></div>
-<div class="extract-actions"><input class="file-input" id="extractInput" type="file" accept=".zhip,.zip,application/zip,application/octet-stream"><button class="secondary-btn" type="button" id="extractChoose">Choose archive</button><button class="secondary-btn" type="button" id="extractClear">Clear</button></div>
+<div class="extract-copy"><strong>Extract a native .zhip file</strong><span>Choose an archive to inspect its contents and download extracted files. Files stay on your device.</span></div>
+<div class="extract-actions"><input class="file-input" id="extractInput" type="file" accept=".zhip,application/octet-stream"><button class="secondary-btn" type="button" id="extractChoose">Choose archive</button><button class="secondary-btn" type="button" id="extractClear">Clear</button></div>
 </div>
 <div class="extract-progress hidden" id="extractProgress"><div id="extractProgressFill"></div></div>
 <div class="extract-summary" id="extractSummary">No archive selected.</div>
-<div class="extract-list" id="extractList"><div class="empty-state"><div class="empty-symbol">↧</div><div>Select a .zhip or .zip archive to view its contents.</div></div></div>
+<div class="extract-list" id="extractList"><div class="empty-state"><div class="empty-symbol">↧</div><div>Select a .zhip archive to view its contents.</div></div></div>
 <div class="extract-hint">ZHiPManager uses its own ZHIP v1 container with DEFLATE-compressed entries. ZIP files are not supported by this native-format reader. Large archives may require extra browser memory.</div>
 <div class="message" id="extractMessage" role="status" aria-live="polite"></div>
 </div>
@@ -205,7 +205,7 @@ const extractInput=el('extractInput'),extractDrop=el('extractDrop'),extractList=
 let extractedEntries=[];
 function clearExtract(){
  extractedEntries=[];extractInput.value='';extractList.replaceChildren();
- const empty=document.createElement('div');empty.className='empty-state';const icon=document.createElement('div');icon.className='empty-symbol';icon.textContent='↧';const copy=document.createElement('div');copy.textContent='Select a .zhip or .zip archive to view its contents.';empty.append(icon,copy);extractList.append(empty);
+ const empty=document.createElement('div');empty.className='empty-state';const icon=document.createElement('div');icon.className='empty-symbol';icon.textContent='↧';const copy=document.createElement('div');copy.textContent='Select a .zhip archive to view its contents.';empty.append(icon,copy);extractList.append(empty);
  el('extractSummary').textContent='No archive selected.';el('extractProgress').classList.add('hidden');el('extractProgressFill').style.width='0';el('extractMessage').className='message';el('extractMessage').textContent='';
 }
 function safeArchivePath(path){
