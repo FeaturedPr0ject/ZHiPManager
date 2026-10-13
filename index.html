@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101827">
+<meta name="description" content="ZHiPManager — create your ZHIP archive locally in your browser. Up to 400 MB total input.">
+<title>ZHiPManager — Your files, neatly packed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
+<style>
+:root{color-scheme:dark;--bg:#0b1120;--panel:#111b2e;--panel2:#16233a;--line:#263650;--text:#f0f5ff;--muted:#9aaac3;--blue:#7197ff;--cyan:#70e0d0;--purple:#ad9bff;--danger:#ff8795;--shadow:0 24px 70px #02071166}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 78% -15%,#253b6980 0,transparent 42%),radial-gradient(ellipse at 0% 40%,#183f4840 0,transparent 40%),var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}button,input{font:inherit}button{cursor:pointer}.shell{width:min(1140px,calc(100% - 44px));margin:auto}.topbar{height:82px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ffffff0d}.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit}.brand-mark{width:42px;height:42px;border-radius:14px;background:linear-gradient(145deg,#89a9ff,#5b67d9);display:grid;place-items:center;box-shadow:0 8px 24px #657bff35}.brand-mark svg{width:23px}.brand-name{font:700 20px 'Space Grotesk';letter-spacing:-.7px}.brand-name span{color:#8bb1ff}.brand-sub{font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:.3px}.top-right{display:flex;align-items:center;gap:10px}.local-pill,.limit-pill{border:1px solid var(--line);background:#111b2a99;padding:9px 12px;border-radius:999px;color:#c8d4e8;font-size:12px;display:flex;align-items:center;gap:7px}.dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 12px #70e0d0a8}.hero{padding:66px 0 35px;text-align:center}.eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid #7e9fff38;background:#7e9fff0c;color:#b3c5ff;padding:7px 12px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase}.eyebrow svg{width:14px;height:14px}.hero h1{font:600 clamp(38px,6vw,66px)/1.04 'Space Grotesk';letter-spacing:-3px;margin:22px 0 17px}.hero h1 .gradient{background:linear-gradient(100deg,#f5f7ff 5%,#a8baff 50%,#73e4d5 100%);color:transparent;background-clip:text}.hero p{font-size:15px;line-height:1.8;max-width:570px;margin:0 auto;color:var(--muted)}.hero p strong{color:#e5edff;font-weight:600}.workspace{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:20px;align-items:start;padding-bottom:48px}.card{background:linear-gradient(150deg,#142037f5,#10192bf5);border:1px solid #ffffff12;border-radius:22px;box-shadow:var(--shadow);overflow:hidden}.card-head{padding:22px 24px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ffffff0b}.card-head h2{font:600 16px 'Space Grotesk';margin:0;letter-spacing:-.3px}.step{font-size:10px;color:#9aafff;letter-spacing:1.2px;font-weight:700}.main-content{padding:22px 24px 24px}.dropzone{position:relative;border:1.5px dashed #4c6390;background:linear-gradient(145deg,#24385d44,#16253a99);border-radius:17px;min-height:224px;padding:30px 20px;display:flex;align-items:center;justify-content:center;text-align:center;transition:.2s ease;outline:none}.dropzone:hover,.dropzone:focus-visible,.dropzone.dragover{border-color:#87a5ff;background:linear-gradient(145deg,#344b7955,#172a42cc);transform:translateY(-1px)}.dropzone.dragover{box-shadow:inset 0 0 0 1px #87a5ff66}.upload-icon{height:58px;width:58px;margin:0 auto 15px;border-radius:18px;background:linear-gradient(145deg,#89a9ff22,#70e0d014);border:1px solid #88aaff33;display:grid;place-items:center;color:#a8baff}.upload-icon svg{width:27px;height:27px}.dropzone h3{font:600 17px 'Space Grotesk';margin:0 0 8px}.dropzone p{font-size:12px;color:var(--muted);margin:0;line-height:1.7}.dropzone p b{color:#b6c6ff;font-weight:600}.choose-btn,.primary-btn{border:0;background:linear-gradient(110deg,#7596ff,#8b8bff);color:#0c1530;font-weight:700;border-radius:11px;padding:12px 17px;box-shadow:0 8px 25px #647bff27;transition:transform .15s,filter .15s}.choose-btn{margin-top:17px;font-size:12px}.choose-btn:hover,.primary-btn:hover{filter:brightness(1.08);transform:translateY(-1px)}.drop-note{margin-top:12px!important;font-size:10px!important;color:#8497b5!important}.file-input{display:none}.file-toolbar{display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px;gap:10px}.section-label{font-size:11px;color:#c1cde0;font-weight:700;letter-spacing:.5px}.text-btn{color:#ff9fab;background:transparent;border:0;padding:5px 0;font-size:11px}.file-count{font-size:10px;color:var(--muted);background:#ffffff09;border:1px solid #ffffff0e;border-radius:7px;padding:5px 8px}.file-list{display:flex;flex-direction:column;gap:8px}.empty-state{border:1px solid #ffffff0b;border-radius:13px;padding:18px;display:flex;align-items:center;gap:12px;color:#7f91ad;font-size:12px}.empty-symbol{width:34px;height:34px;background:#ffffff08;border-radius:10px;display:grid;place-items:center}.file-row{display:flex;align-items:center;gap:11px;padding:11px 12px;border:1px solid #ffffff0e;background:#ffffff04;border-radius:12px;min-width:0}.file-type{width:38px;height:40px;border-radius:10px;background:#7898ff17;color:#a8bcff;display:grid;place-items:center;flex:none}.file-type svg{width:19px}.file-info{min-width:0;flex:1}.file-name{font-size:12px;color:#e6edfa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}.file-meta{font-size:10px;color:#8394af;margin-top:5px}.file-size{font-size:10px;color:#aabbd4;white-space:nowrap}.remove-file{border:0;background:transparent;color:#70819c;font-size:18px;padding:2px 4px}.remove-file:hover{color:var(--danger)}.field-label{display:block;font-size:11px;color:#bac8dc;font-weight:600;margin-bottom:9px}.name-field{margin-top:23px}.name-wrap{display:flex;background:#0b1424;border:1px solid #2b3d59;border-radius:11px;padding:4px;align-items:center;transition:border .2s}.name-wrap:focus-within{border-color:#859fff}.name-wrap input{background:transparent;border:0;outline:0;color:#edf3ff;padding:9px 10px;min-width:0;flex:1;font-size:12px}.suffix{padding:8px 10px;border-radius:7px;color:#9db5ff;background:#7c9aff17;font:600 12px 'Space Grotesk'}.settings-row{display:flex;align-items:center;justify-content:space-between;margin-top:18px;gap:12px}.setting-copy strong{font-size:11px;display:block;font-weight:600}.setting-copy span{font-size:10px;color:#8597b2;display:block;margin-top:4px}.select-wrap{position:relative}.select-wrap select{appearance:none;border:1px solid #2a3b57;background:#101b2d;color:#dbe5f8;border-radius:9px;padding:9px 29px 9px 11px;font-size:11px;outline:none;cursor:pointer}.select-wrap:after{content:'⌄';position:absolute;right:10px;top:6px;color:#9bafd1;pointer-events:none}.meter{margin-top:22px;padding:14px;background:#0b1423;border:1px solid #ffffff0a;border-radius:12px}.meter-head{display:flex;justify-content:space-between;gap:8px;font-size:10px;color:#98aac4}.meter-head strong{color:#e1eaff;font-weight:600}.track{height:5px;border-radius:20px;background:#26344a;margin-top:11px;overflow:hidden}.track-fill{height:100%;width:0;background:linear-gradient(90deg,#7898ff,#70e0d0);border-radius:20px;transition:width .2s}.meter-caption{display:flex;justify-content:space-between;font-size:9px;color:#7588a4;margin-top:8px}.primary-btn{width:100%;margin-top:17px;padding:14px 18px;display:flex;justify-content:center;align-items:center;gap:9px;font-size:12px}.primary-btn svg{width:17px;height:17px}.primary-btn:disabled{cursor:not-allowed;opacity:.45;filter:grayscale(.4);transform:none}.message{display:none;margin-top:12px;border-radius:10px;padding:10px 12px;font-size:11px;line-height:1.6}.message.show{display:block}.message.error{background:#ff879510;border:1px solid #ff879533;color:#ffabb5}.message.ok{background:#70e0d010;border:1px solid #70e0d033;color:#93eadf}.side-stack{display:flex;flex-direction:column;gap:16px}.side-card{border:1px solid #ffffff12;background:linear-gradient(150deg,#15223af5,#10192af5);border-radius:19px;padding:20px}.side-title{font:600 14px 'Space Grotesk';margin:0 0 17px}.stat{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid #ffffff0a}.stat:last-child{border:0;padding-bottom:0}.stat-icon{width:35px;height:35px;border:1px solid #8eaaff23;background:#8eaaff10;color:#a9bcff;display:grid;place-items:center;border-radius:11px;flex:none}.stat-icon svg{width:17px}.stat-text{flex:1}.stat-text strong{display:block;font:600 13px 'Space Grotesk'}.stat-text span{font-size:10px;color:#8395b0;display:block;margin-top:3px}.format-badge{font-size:9px;font-weight:700;color:#a8bcff;background:#849fff16;border:1px solid #829cff29;border-radius:6px;padding:4px 6px}.privacy{background:linear-gradient(135deg,#12352f80,#16253a);border:1px solid #70e0d022;border-radius:19px;padding:18px}.privacy-head{display:flex;align-items:center;gap:9px;margin-bottom:9px}.privacy-head svg{width:18px;color:var(--cyan)}.privacy-head strong{font:600 12px 'Space Grotesk'}.privacy p{font-size:10px;line-height:1.7;color:#9bb6b5;margin:0}.mini-footer{padding:18px 0 30px;border-top:1px solid #ffffff0c;display:flex;justify-content:space-between;gap:12px;color:#6e819e;font-size:10px}.mini-footer strong{font-weight:600;color:#a1b2cc}.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#182941;border:1px solid #405577;color:#e9f1ff;border-radius:12px;padding:12px 16px;font-size:12px;box-shadow:var(--shadow);transition:.25s;z-index:10;max-width:calc(100vw - 30px)}.toast.show{transform:translate(-50%,0);opacity:1}.hidden{display:none!important}@media(max-width:850px){.workspace{grid-template-columns:1fr}.side-stack{display:grid;grid-template-columns:1fr 1fr}.hero{padding-top:53px}.hero h1{letter-spacing:-2px}.side-card{height:100%}}@media(max-width:560px){.shell{width:calc(100% - 28px)}.topbar{height:69px}.brand-mark{width:38px;height:38px}.brand-name{font-size:18px}.brand-sub{font-size:9px}.local-pill{font-size:0;padding:10px}.local-pill .dot{width:8px;height:8px}.limit-pill{display:none}.hero{padding:43px 0 28px}.hero h1{font-size:42px;letter-spacing:-2px;margin:19px 0 13px}.hero p{font-size:13px}.workspace{gap:14px;padding-bottom:32px}.card{border-radius:17px}.card-head{padding:18px 17px 15px}.main-content{padding:17px}.dropzone{min-height:202px;padding:23px 13px}.dropzone h3{font-size:15px}.dropzone p{font-size:11px}.side-stack{grid-template-columns:1fr}.side-card{padding:17px}.mini-footer{font-size:9px;flex-direction:column;align-items:center}.settings-row{align-items:flex-start}.file-size{font-size:9px}.file-row{gap:8px;padding:10px}.file-type{width:33px;height:36px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="topbar">
+<a class="brand" href="#" aria-label="ZHiPManager home">
+<div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="m4 7.5 8 4.7 8-4.7M12 12.2V21"/><path d="m9.5 5 8 4.5"/></svg></div>
+<div><div class="brand-name">ZHiP<span>Manager</span></div><div class="brand-sub">Zone Hybrid Improvement Plan</div></div>
+</a>
+<div class="top-right"><div class="local-pill"><span class="dot"></span> Local processing</div><div class="limit-pill">400 MB limit</div></div>
+</header>
+<section class="hero">
+<div class="eyebrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9z"/></svg> SIMPLE. PRIVATE. ORGANIZED.</div>
+<h1>Your files,<br><span class="gradient">beautifully packed.</span></h1>
+<p>Create your own <strong>.zhip archive</strong> in seconds. Drop your files, choose a name, and download one neat package — all on your device.</p>
+</section>
+<main class="workspace">
+<section class="card">
+<div class="card-head"><h2>Create an archive</h2><span class="step">STEP 01 — UPLOAD</span></div>
+<div class="main-content">
+<div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose files to archive">
+<div><div class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m-4 4 4-4 4 4"/><path d="M20 16.5v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2"/></svg></div><h3>Drop files to start creating</h3><p>Drag and drop your files here, or <b>browse your device</b>.</p><button type="button" class="choose-btn" id="chooseBtn">＋ &nbsp; Choose files</button><p class="drop-note">Up to 400 MB total · Files stay on your device</p></div>
+</div>
+<input class="file-input" id="fileInput" type="file" multiple>
+<input class="file-input" id="folderInput" type="file" webkitdirectory multiple>
+<div class="file-toolbar"><span class="section-label">Selected files</span><div style="display:flex;gap:8px;align-items:center"><span class="file-count" id="fileCount">0 files</span><button class="text-btn" id="clearBtn" type="button">Clear all</button></div></div>
+<div class="file-list" id="fileList"><div class="empty-state"><div class="empty-symbol">＋</div><div><strong style="display:block;color:#b0bfd5;font-size:11px;margin-bottom:4px">Your archive starts here</strong>Choose one or more files to see them listed here.</div></div></div>
+<div class="name-field"><label for="archiveName" class="field-label">Archive name</label><div class="name-wrap"><input id="archiveName" type="text" value="MyArchive" maxlength="100" autocomplete="off" spellcheck="false" aria-label="Archive name"><span class="suffix">.zhip</span></div></div>
+<div class="settings-row"><div class="setting-copy"><strong>Compression level</strong><span>Higher compression may take longer.</span></div><div class="select-wrap"><select id="compression" aria-label="Compression level"><option value="1">Fast</option><option value="6" selected>Balanced</option><option value="9">Maximum</option></select></div></div>
+<div class="meter"><div class="meter-head"><span>Input size</span><strong id="sizeLabel">0 B / 400 MB</strong></div><div class="track"><div class="track-fill" id="sizeBar"></div></div><div class="meter-caption"><span id="percentLabel">Ready when you are</span><span>400 MB maximum</span></div></div>
+<button class="primary-btn" id="createBtn" type="button" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-4-4 4 4 4-4"/><path d="M5 16v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg><span id="createText">Create .zhip archive</span></button>
+<div class="message" id="message" role="status" aria-live="polite"></div>
+</div>
+</section>
+<aside class="side-stack">
+<section class="side-card"><h2 class="side-title">Made for your workflow</h2>
+<div class="stat"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4.5 6v5c0 4.7 3.2 7.9 7.5 10 4.3-2.1 7.5-5.3 7.5-10V6z"/><path d="m9 12 2 2 4-4"/></svg></div><div class="stat-text"><strong>Private by design</strong><span>Files are processed locally.</span></div></div>
+<div class="stat"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M8 3v4m8-4v4M3 10h18"/></svg></div><div class="stat-text"><strong>Up to 400 MB</strong><span>One combined input limit.</span></div><span class="format-badge">400 MB</span></div>
+<div class="stat"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="M12 12v9m-8-13.5 8 4.5 8-4.5"/></svg></div><div class="stat-text"><strong>Your own extension</strong><span>Download archives as .zhip.</span></div><span class="format-badge">.ZHIP</span></div>
+</section>
+<section class="privacy"><div class="privacy-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 4v3"/></svg><strong>Your files stay yours.</strong></div><p>Files are read and compressed in your browser. ZHiPManager does not upload your selected files to a server.</p></section>
+<section class="side-card"><h2 class="side-title">How it works</h2>
+<div class="stat"><div class="stat-icon">1</div><div class="stat-text"><strong>Choose files</strong><span>Select or drag files into the box.</span></div></div>
+<div class="stat"><div class="stat-icon">2</div><div class="stat-text"><strong>Name your archive</strong><span>Make the name your own.</span></div></div>
+<div class="stat"><div class="stat-icon">3</div><div class="stat-text"><strong>Create & download</strong><span>Save your new .zhip file.</span></div></div>
+</section>
+</aside>
+</main>
+<footer class="mini-footer"><span>© 2026 <strong>ZHiPManager</strong></span><span>Zone Hybrid Improvement Plan · Built for your files</span><span>Made with care <strong>✦</strong></span></footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(function(){
+'use strict';
+const MAX_BYTES=400*1024*1024;
+const files=[];
+const el=id=>document.getElementById(id);
+const dropzone=el('dropzone'),fileInput=el('fileInput'),folderInput=el('folderInput'),fileList=el('fileList');
+let busy=false;
+function formatBytes(bytes){
+ if(bytes===0)return '0 B';
+ const units=['B','KB','MB','GB'];const i=Math.min(Math.floor(Math.log(bytes)/Math.log(1024)),3);
+ return (bytes/Math.pow(1024,i)).toLocaleString('en-US',{maximumFractionDigits:i===0?0:1})+' '+units[i];
+}
+function safeName(s){return s.replace(/[\\/:*?"<>|\u0000-\u001f]/g,'_').replace(/\s+/g,' ').trim().replace(/^\.+/,'')||'MyArchive';}
+function showMessage(text,type){const m=el('message');m.textContent=text;m.className='message show '+type;}
+function clearMessage(){el('message').className='message';el('message').textContent='';}
+function toast(text){const t=el('toast');t.textContent=text;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+function totalSize(){return files.reduce((n,f)=>n+f.file.size,0);}
+function render(){
+ fileList.replaceChildren();
+ if(!files.length){const empty=document.createElement('div');empty.className='empty-state';const ico=document.createElement('div');ico.className='empty-symbol';ico.textContent='＋';const copy=document.createElement('div');const strong=document.createElement('strong');strong.style.cssText='display:block;color:#b0bfd5;font-size:11px;margin-bottom:4px';strong.textContent='Your archive starts here';copy.append(strong,document.createTextNode('Choose one or more files to see them listed here.'));empty.append(ico,copy);fileList.append(empty);}
+ files.forEach((item,index)=>{
+  const row=document.createElement('div');row.className='file-row';
+  const type=document.createElement('div');type.className='file-type';type.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5M9 13h6m-6 4h6"/></svg>';
+  const info=document.createElement('div');info.className='file-info';const name=document.createElement('div');name.className='file-name';name.textContent=item.path;name.title=item.path;const meta=document.createElement('div');meta.className='file-meta';meta.textContent='File · '+(item.file.type||'Unknown type');info.append(name,meta);
+  const size=document.createElement('div');size.className='file-size';size.textContent=formatBytes(item.file.size);
+  const remove=document.createElement('button');remove.type='button';remove.className='remove-file';remove.setAttribute('aria-label','Remove '+item.path);remove.textContent='×';remove.addEventListener('click',()=>{files.splice(index,1);render();clearMessage();});
+  row.append(type,info,size,remove);fileList.append(row);
+ });
+ const total=totalSize(),over=total>MAX_BYTES;
+ el('fileCount').textContent=files.length+' file'+(files.length===1?'':'s');
+ el('sizeLabel').textContent=formatBytes(total)+' / 400 MB';
+ el('sizeBar').style.width=Math.min(100,total/MAX_BYTES*100)+'%';
+ el('sizeBar').style.background=over?'var(--danger)':'linear-gradient(90deg,#7898ff,#70e0d0)';
+ el('percentLabel').textContent=over?'Limit exceeded':files.length?Math.min(100,total/MAX_BYTES*100).toFixed(1)+'% of limit':'Ready when you are';
+ el('createBtn').disabled=busy||!files.length||over||!window.fflate;
+ el('createText').textContent=busy?'Creating your archive…':!window.fflate?'Compression library unavailable':'Create .zhip archive';
+ el('clearBtn').disabled=busy;
+ if(over){showMessage('Total input is '+formatBytes(total)+'. The 400 MB limit has been exceeded. Remove some files to continue.','error');}
+}
+function addFiles(list){
+ clearMessage();let added=0,skipped=0;
+ for(const file of list){
+  const path=file.webkitRelativePath||file.name;
+  if(files.some(x=>x.path===path)){skipped++;continue;}
+  if(totalSize()+file.size>MAX_BYTES){skipped++;continue;}
+  files.push({file,path});added++;
+ }
+ render();
+ if(skipped)showMessage(skipped+' file(s) were skipped because they would exceed the 400 MB limit or were already selected.','error');
+ else if(added)toast(added+' file(s) added');
+}
+el('chooseBtn').addEventListener('click',e=>{e.stopPropagation();fileInput.click();});
+dropzone.addEventListener('click',e=>{if(e.target.closest('button'))return;fileInput.click();});
+dropzone.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fileInput.click();}});
+fileInput.addEventListener('change',()=>{addFiles(Array.from(fileInput.files||[]));fileInput.value='';});
+folderInput.addEventListener('change',()=>{addFiles(Array.from(folderInput.files||[]));folderInput.value='';});
+dropzone.addEventListener('dragover',e=>{e.preventDefault();dropzone.classList.add('dragover');});
+dropzone.addEventListener('dragleave',e=>{if(!dropzone.contains(e.relatedTarget))dropzone.classList.remove('dragover');});
+dropzone.addEventListener('drop',e=>{e.preventDefault();dropzone.classList.remove('dragover');if(e.dataTransfer.files)addFiles(Array.from(e.dataTransfer.files));});
+el('clearBtn').addEventListener('click',()=>{if(busy)return;files.splice(0);clearMessage();render();});
+el('archiveName').addEventListener('input',()=>{el('archiveName').setCustomValidity('');});
+el('createBtn').addEventListener('click',async()=>{
+ if(busy||!files.length)return;
+ if(!window.fflate){showMessage('The compression library did not load. Check your internet connection and reload the page.','error');return;}
+ const total=totalSize();if(total>MAX_BYTES){showMessage('The total input must not exceed 400 MB.','error');return;}
+ const archiveName=safeName(el('archiveName').value);
+ const level=Number(el('compression').value);
+ busy=true;clearMessage();render();
+ const button=el('createBtn'),original=el('createText');
+ try{
+  showMessage('Preparing files for compression…','ok');
+  const input={};
+  for(let i=0;i<files.length;i++){
+   const item=files[i];let key=item.path.replace(/^\/+|^\.\//,'');
+   if(!key||key.split('/').some(part=>part==='..'))throw new Error('A file has an invalid path: '+item.path);
+   if(Object.prototype.hasOwnProperty.call(input,key))key=i+'_'+key;
+   input[key]=new Uint8Array(await item.file.arrayBuffer());
+   original.textContent='Reading files… '+Math.round((i+1)/files.length*100)+'%';
+  }
+  showMessage('Compressing '+files.length+' file(s)… keep this tab open.','ok');
+  original.textContent='Compressing…';
+  await new Promise(resolve=>setTimeout(resolve,30));
+  const zipBytes=fflate.zipSync(input,{level});
+  const header=new TextEncoder().encode('ZHIP\x01\x00');
+  const output=new Uint8Array(header.length+zipBytes.length);output.set(header,0);output.set(zipBytes,header.length);
+  const blob=new Blob([output],{type:'application/vnd.zhip'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=archiveName+'.zhip';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+  showMessage('Done! '+archiveName+'.zhip was created ('+formatBytes(blob.size)+'). The file has a ZHIP header followed by ZIP-compatible archive data.','ok');
+  toast('Your .zhip archive is ready');
+ }catch(error){console.error(error);showMessage('Could not create the archive: '+(error&&error.message?error.message:'Unknown error')+'. Your original files were not changed.','error');}
+ finally{busy=false;render();if(el('message').textContent.startsWith('Done!')){el('createText').textContent='Create another .zhip archive';}}
+});
+render();
+})();
+</script>
+</body>
+</html>
