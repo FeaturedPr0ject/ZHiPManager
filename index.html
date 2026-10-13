@@ -76,7 +76,7 @@
 <div class="extract-progress hidden" id="extractProgress"><div id="extractProgressFill"></div></div>
 <div class="extract-summary" id="extractSummary">No archive selected.</div>
 <div class="extract-list" id="extractList"><div class="empty-state"><div class="empty-symbol">↧</div><div>Select a .zhip or .zip archive to view its contents.</div></div></div>
-<div class="extract-hint">ZHiPManager recognizes its current ZHIP header and ZIP archives. Password-protected ZIP files are not supported in this version. Large archives may require extra browser memory.</div>
+<div class="extract-hint">ZHiPManager uses its own ZHIP v1 container with DEFLATE-compressed entries. ZIP files are not supported by this native-format reader. Large archives may require extra browser memory.</div>
 <div class="message" id="extractMessage" role="status" aria-live="polite"></div>
 </div>
 </section>
@@ -167,12 +167,35 @@ el('createBtn').addEventListener('click',async()=>{
   showMessage('Compressing '+files.length+' file(s)… keep this tab open.','ok');
   original.textContent='Compressing…';
   await new Promise(resolve=>setTimeout(resolve,30));
-  const zipBytes=fflate.zipSync(input,{level});
-  const header=new TextEncoder().encode('ZHIP\x01\x00');
-  const output=new Uint8Array(header.length+zipBytes.length);output.set(header,0);output.set(zipBytes,header.length);
-  const blob=new Blob([output],{type:'application/vnd.zhip'});
+  const encoder=new TextEncoder();
+  const chunks=[];
+  const header=new Uint8Array(9);
+  header.set([90,72,73,80,1],0);
+  new DataView(header.buffer).setUint32(5,files.length,true);
+  chunks.push(header);
+  let archiveBytes=header.length;
+  for(let i=0;i<files.length;i++){
+   const item=files[i];
+   let path=item.path.replace(/^\/+|^\.\//,'');
+   if(!path||!safeArchivePath(path))throw new Error('Invalid file path: '+item.path);
+   const nameBytes=encoder.encode(path);
+   if(nameBytes.length>65535)throw new Error('File path is too long: '+path);
+   const raw=input[item.path.replace(/^\/+|^\.\//,'')]||input[path];
+   const compressed=fflate.deflateSync(raw,{level});
+   const record=new Uint8Array(14+nameBytes.length);
+   const view=new DataView(record.buffer);
+   view.setUint16(0,nameBytes.length,true);
+   view.setUint32(2,raw.length,true);
+   view.setUint32(6,compressed.length,true);
+   view.setUint32(10,fflate.crc32(raw),true);
+   record.set(nameBytes,14);
+   chunks.push(record,compressed);
+   archiveBytes+=record.length+compressed.length;
+   original.textContent='Compressing… '+Math.round((i+1)/files.length*100)+'%';
+  }
+  const blob=new Blob(chunks,{type:'application/vnd.zhip'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=archiveName+'.zhip';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
-  showMessage('Done! '+archiveName+'.zhip was created ('+formatBytes(blob.size)+'). The file has a ZHIP header followed by ZIP-compatible archive data.','ok');
+  showMessage('Done! '+archiveName+'.zhip was created ('+formatBytes(blob.size)+'). This archive uses the native ZHIP v1 container with individually DEFLATE-compressed files, not ZIP.','ok');
   toast('Your .zhip archive is ready');
  }catch(error){console.error(error);showMessage('Could not create the archive: '+(error&&error.message?error.message:'Unknown error')+'. Your original files were not changed.','error');}
  finally{busy=false;render();if(el('message').textContent.startsWith('Done!')){el('createText').textContent='Create another .zhip archive';}}
@@ -211,16 +234,37 @@ async function readArchive(file){
  try{
   if(!window.fflate)throw new Error('Compression library is unavailable. Reload the page and try again.');
   const buffer=new Uint8Array(await file.arrayBuffer());
-  let payload=buffer;
-  if(buffer.length>=6&&buffer[0]===90&&buffer[1]===72&&buffer[2]===73&&buffer[3]===80&&buffer[4]===1&&buffer[5]===0){payload=buffer.subarray(6);}
-  el('extractProgressFill').style.width='55%';
-  const unpacked=fflate.unzipSync(payload);
+  if(buffer.length<9||buffer[0]!==90||buffer[1]!==72||buffer[2]!==73||buffer[3]!==80)throw new Error('Invalid ZHIP signature.');
+  if(buffer[4]!==1)throw new Error('Unsupported ZHIP version: '+buffer[4]);
+  const view=new DataView(buffer.buffer,buffer.byteOffset,buffer.byteLength);
+  const count=view.getUint32(5,true);
+  if(count>100000)throw new Error('Archive contains an unreasonable number of entries.');
+  let offset=9;
   const entries=[];
-  for(const [name,data] of Object.entries(unpacked)){
-   if(name.endsWith('/'))continue;
-   if(!safeArchivePath(name))continue;
-   entries.push({name,data});
+  let totalExpanded=0;
+  el('extractProgressFill').style.width='35%';
+  for(let i=0;i<count;i++){
+   if(offset+14>buffer.length)throw new Error('Archive is truncated in an entry header.');
+   const nameLength=view.getUint16(offset,true);
+   const originalLength=view.getUint32(offset+2,true);
+   const compressedLength=view.getUint32(offset+6,true);
+   const expectedCrc=view.getUint32(offset+10,true);
+   offset+=14;
+   if(nameLength===0||offset+nameLength+compressedLength>buffer.length)throw new Error('Invalid entry lengths or truncated archive.');
+   const name=new TextDecoder('utf-8',{fatal:true}).decode(buffer.subarray(offset,offset+nameLength));
+   offset+=nameLength;
+   if(!safeArchivePath(name))throw new Error('Unsafe path rejected: '+name);
+   const compressed=buffer.subarray(offset,offset+compressedLength);
+   offset+=compressedLength;
+   totalExpanded+=originalLength;
+   if(totalExpanded>2*1024*1024*1024)throw new Error('Expanded data exceeds the 2 GiB safety limit.');
+   const data=fflate.inflateSync(compressed);
+   if(data.length!==originalLength)throw new Error('Size verification failed for '+name);
+   if(fflate.crc32(data)!==expectedCrc)throw new Error('Integrity check failed for '+name);
+   if(!name.endsWith('/'))entries.push({name,data});
+   el('extractProgressFill').style.width=(35+Math.round((i+1)/Math.max(1,count)*60))+'%';
   }
+  if(offset!==buffer.length)throw new Error('Unexpected trailing data after ZHIP entries.');
   entries.sort((a,b)=>a.name.localeCompare(b.name));
   el('extractProgressFill').style.width='100%';
   renderExtracted(entries);
@@ -229,7 +273,7 @@ async function readArchive(file){
   const msg=el('extractMessage');msg.textContent=entries.length?'Archive opened successfully. Choose Download next to a file to save it.':'The archive contains no extractable files.';msg.className='message show '+(entries.length?'ok':'error');
  }catch(error){
   console.error(error);el('extractSummary').textContent='Could not open archive.';
-  const msg=el('extractMessage');msg.textContent='Unable to extract this file. It may be damaged, password-protected, or not a supported ZHIP/ZIP archive. '+(error&&error.message?error.message:'');msg.className='message show error';
+  const msg=el('extractMessage');msg.textContent='Unable to extract this file. It may be damaged, or it may not be a supported ZHIP v1 archive. '+(error&&error.message?error.message:'');msg.className='message show error';
   extractList.replaceChildren();
  }finally{el('extractProgress').classList.add('hidden');}
 }
