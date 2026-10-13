@@ -92,6 +92,16 @@ const files=[];
 const el=id=>document.getElementById(id);
 const dropzone=el('dropzone'),fileInput=el('fileInput'),folderInput=el('folderInput'),fileList=el('fileList');
 let busy=false;
+function crc32(data){
+ const table=crc32.table||(crc32.table=(()=>{
+  const values=new Uint32Array(256);
+  for(let n=0;n<256;n++){let value=n;for(let k=0;k<8;k++)value=(value&1)?(0xedb88320^(value>>>1)):(value>>>1);values[n]=value>>>0;}
+  return values;
+ })());
+ let value=0xffffffff;
+ for(let i=0;i<data.length;i++)value=table[(value^data[i])&0xff]^(value>>>8);
+ return (value^0xffffffff)>>>0;
+}
 function formatBytes(bytes){
  if(bytes===0)return '0 B';
  const units=['B','KB','MB','GB'];const i=Math.min(Math.floor(Math.log(bytes)/Math.log(1024)),3);
@@ -187,7 +197,7 @@ el('createBtn').addEventListener('click',async()=>{
    view.setUint16(0,nameBytes.length,true);
    view.setUint32(2,raw.length,true);
    view.setUint32(6,compressed.length,true);
-   view.setUint32(10,fflate.crc32(raw),true);
+   view.setUint32(10,crc32(raw),true);
    record.set(nameBytes,14);
    chunks.push(record,compressed);
    archiveBytes+=record.length+compressed.length;
@@ -260,7 +270,7 @@ async function readArchive(file){
    if(totalExpanded>2*1024*1024*1024)throw new Error('Expanded data exceeds the 2 GiB safety limit.');
    const data=fflate.inflateSync(compressed);
    if(data.length!==originalLength)throw new Error('Size verification failed for '+name);
-   if(fflate.crc32(data)!==expectedCrc)throw new Error('Integrity check failed for '+name);
+   if(crc32(data)!==expectedCrc)throw new Error('Integrity check failed for '+name);
    if(!name.endsWith('/'))entries.push({name,data});
    el('extractProgressFill').style.width=(35+Math.round((i+1)/Math.max(1,count)*60))+'%';
   }
