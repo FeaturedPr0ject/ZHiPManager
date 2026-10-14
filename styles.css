@@ -191,3 +191,7 @@ input:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid 
 @keyframes proModalIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:480px){.pro-modal{padding:24px 20px;border-radius:19px}.pro-modal h2{font-size:23px}}
 @media(prefers-reduced-motion:reduce){.pro-modal-backdrop,.pro-modal{animation:none}}
+
+.pro-unlock-row{margin-top:12px;margin-bottom:16px;gap:14px}
+.pro-unlock-row[hidden]{display:none}
+.settings-row{margin-top:0}
