@@ -76,3 +76,6 @@ input:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid 
 @media(prefers-reduced-motion:reduce){
  .secondary-btn:hover,.theme-toggle:hover,.choose-btn:hover,.primary-btn:hover,.secondary-btn:active,.theme-toggle:active,.choose-btn:active,.primary-btn:active{animation:none!important}
 }
+
+.jelly-trigger{animation:jellyPress .48s cubic-bezier(.2,.85,.3,1) both!important;transform-origin:center!important}
+@media(prefers-reduced-motion:reduce){.jelly-trigger{animation:none!important}}
