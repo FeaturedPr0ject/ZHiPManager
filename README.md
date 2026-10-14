@@ -8,14 +8,15 @@
 - Drag-and-drop or multi-file selection
 - Combined input limit of 400 MiB
 - Custom archive name with Fast, Smart hybrid, and Maximum DEFLATE modes
-- Create and extract native ZHIP v2 archives; read existing v1 archives
+- Create and extract native ZHIP v3 archives; read existing v1 and v2 archives
 - Per-file hybrid selection: tests DEFLATE levels and keeps the smallest result; stores original bytes if compression would increase size
 - CRC-32 integrity checks
+- Optional ECDSA P-256 / SHA-256 digital signature and verification
 - Visible timestamped logs for compression and extraction progress, per-file results, and errors
 - Application JavaScript is separated into `app.js`
 - Client-side processing; selected file contents are not uploaded to an application server
 
-## ZHIP v2 binary format
+## ZHIP v3 binary format
 
 This format is **not ZIP** and does not use ZIP container structures.
 
@@ -26,7 +27,7 @@ All integer fields are unsigned little-endian.
 | Offset | Size | Meaning |
 |---:|---:|---|
 | 0 | 4 | ASCII signature `ZHIP` |
-| 4 | 1 | Format version (`2`) |
+| 4 | 1 | Format version (`3`) |
 | 5 | 4 | Number of entries |
 
 ### Entry record
@@ -43,7 +44,7 @@ Each entry is stored sequentially as a 15-byte record header, UTF-8 path, then p
 | Path | Variable | UTF-8 relative path |
 | Payload | Variable | Original bytes for codec `0`; raw DEFLATE for codec `1` |
 
-The container uses DEFLATE directly through `fflate.deflateSync` / `fflate.inflateSync`; it does not call ZIP archive functions. Smart hybrid mode compares levels 1, 6, and 9 per file and picks the smallest result. If the compressed result is not smaller than the original, the payload is stored as-is to prevent compression overhead from inflating that file. The reader supports ZHIP v1 and v2. ZIP files are not accepted.
+The container uses DEFLATE directly through `fflate.deflateSync` / `fflate.inflateSync`; it does not call ZIP archive functions. Smart hybrid mode compares levels 1, 6, and 9 per file and picks the smallest result. If the compressed result is not smaller than the original, the payload is stored as-is to prevent compression overhead from inflating that file. Signed ZHIP v3 archives use ECDSA P-256 digital signatures with SHA-256. Unsigned archives use ZHIP v2. The signature trailer is `SIGZ` (4 bytes), public-key length (uint16), signature length (uint16), DER/SPKI public key, then signature bytes. The signature covers every preceding archive byte. Verification proves integrity relative to the embedded key, but does not by itself prove the signer’s real-world identity; compare the fingerprint through a trusted channel. The reader also supports ZHIP v1 and v2. ZIP files are not accepted.
 
 ## Deployment
 
@@ -54,6 +55,6 @@ The compression library is loaded from jsDelivr, so an internet connection is ne
 ## Project
 
 - Website: **ZHiPManager**
-- Format: **ZHIP v2 (reads v1)**
+- Format: **ZHIP v2 unsigned / ZHIP v3 signed (reads v1/v2)**
 - Extension: **.zhip**
 - Maximum combined input: **400 MiB**
