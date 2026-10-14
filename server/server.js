@@ -2,7 +2,7 @@ const http = require('node:http');
 const crypto = require('node:crypto');
 
 const PORT = Number(process.env.PORT || 10000);
-const PRO_CODE = String(process.env.PRO_CODE || process.env.ZHIP_PRO_CODE || '');
+const PRO_CODE = String(process.env.RO_CODE || process.env.PRO_CODE || process.env.ZHIP_PRO_CODE || '');
 
 function send(res, status, body) {
   const payload = JSON.stringify(body);
