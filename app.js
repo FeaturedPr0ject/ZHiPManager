@@ -247,8 +247,9 @@ function downloadExtracted(entry){
  const blob=new Blob([entry.data],{type:'application/octet-stream'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=entry.name.split('/').pop()||'extracted-file';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
 }
 async function readArchive(file){
- currentArchiveName=safeName(file.name.replace(/\.zhip$/i,'')||'ConvertedArchive');
+ currentArchiveName=safeName(file.name.replace(/\.(zhip|zip)$/i,'')||'ConvertedArchive');
  convertZipBtn.classList.add('hidden');
+ convertZipBtn.disabled=true;
  clearExtract();addLog('extract','Opening '+file.name+' ('+formatBytes(file.size)+').');
  el('extractSummary').textContent='Reading '+file.name+'…';
  el('extractProgress').classList.remove('hidden');el('extractProgressFill').style.width='20%';
@@ -308,6 +309,7 @@ async function readArchive(file){
   el('extractProgressFill').style.width='100%';
   renderExtracted(entries);
   convertZipBtn.classList.toggle('hidden',entries.length===0);
+  convertZipBtn.disabled=entries.length===0;
   const bytes=entries.reduce((sum,item)=>sum+item.data.length,0);
   el('extractSummary').textContent=entries.length+' file(s) · '+formatBytes(bytes)+' extracted from '+file.name;
   const msg=el('extractMessage');msg.textContent=entries.length?'Archive opened successfully. Choose Download next to a file to save it.':'The archive contains no extractable files.';msg.className='message show '+(entries.length?'ok':'error');addLog('extract','Completed: '+entries.length+' file(s), '+formatBytes(bytes)+'.','success');
@@ -337,7 +339,7 @@ convertZipBtn.addEventListener('click',()=>{
  }
 });
 el('extractChoose').addEventListener('click',()=>extractInput.click());
-el('extractClear').addEventListener('click',()=>{clearExtract();convertZipBtn.classList.add('hidden');});
+el('extractClear').addEventListener('click',()=>{clearExtract();convertZipBtn.classList.add('hidden');convertZipBtn.disabled=true;});
 extractInput.addEventListener('change',()=>{const file=extractInput.files&&extractInput.files[0];if(file)readArchive(file);});
 extractDrop.addEventListener('dragover',e=>{e.preventDefault();extractDrop.style.borderColor='#87a5ff';});
 extractDrop.addEventListener('dragleave',()=>{extractDrop.style.borderColor='';});
