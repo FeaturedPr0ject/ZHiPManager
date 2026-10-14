@@ -182,13 +182,6 @@ el('createBtn').addEventListener('click',async()=>{
  busy=true;clearMessage();render();addLog('create','Started archive creation: '+files.length+' file(s), '+formatBytes(total)+'.');
  const button=el('createBtn'),original=el('createText');
  try{
-  let zstd=null;
-  if(compressionMode==='ultra'){
-   showMessage('Loading the Zstandard compression engine…','ok');
-   addLog('create','Loading Zstandard WebAssembly codec.');
-   zstd=await ensureZstd();
-   addLog('create','Zstandard is ready. ULTRA ZSTD uses compression level 19.');
-  }
   showMessage('Preparing files for compression…','ok');
   const input={};
   for(let i=0;i<files.length;i++){
