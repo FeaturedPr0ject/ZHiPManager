@@ -1,6 +1,6 @@
 # ZHiPManager
 
-**Zone Hybrid Improvement Plan** — a responsive, browser-based archive creator and extractor for the native `.zhip` format.
+**Zone Hybrid Improvement Plan** — a responsive, browser-based archive creator and extractor with a separate `app.js` application script for the native `.zhip` format.
 
 ## Features
 
@@ -11,6 +11,8 @@
 - Create and extract native ZHIP v2 archives; read existing v1 archives
 - Per-file hybrid selection: tests DEFLATE levels and keeps the smallest result; stores original bytes if compression would increase size
 - CRC-32 integrity checks
+- Visible timestamped logs for compression and extraction progress, per-file results, and errors
+- Application JavaScript is separated into `app.js`
 - Client-side processing; selected file contents are not uploaded to an application server
 
 ## ZHIP v2 binary format
@@ -45,7 +47,7 @@ The container uses DEFLATE directly through `fflate.deflateSync` / `fflate.infla
 
 ## Deployment
 
-This is a static site. Deploy the repository to Vercel with no build command and output directory `.`, or serve `index.html` using GitHub Pages.
+This is a static site. Deploy `index.html`, `app.js`, and the supporting files to Vercel with no build command and output directory `.`, or serve `index.html` using GitHub Pages.
 
 The compression library is loaded from jsDelivr, so an internet connection is needed to load it. Compression and extraction happen in the browser. Peak RAM use can be significantly higher than the input size, especially near the 400 MiB limit.
 
