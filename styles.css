@@ -160,3 +160,10 @@ input:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid 
 
 .ultra-option>span:first-child{letter-spacing:.25px}
 .ultra-option small{max-width:100%;white-space:nowrap}
+
+.pro-unlock-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px;padding:9px 11px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);font-size:11px;color:var(--muted)}
+.pro-code-btn{border:1px solid #8b9cff66;background:linear-gradient(100deg,#778cff30,#a88bff28);color:var(--text);border-radius:9px;padding:7px 10px;font-size:11px;font-weight:700;white-space:nowrap}
+.ultimate-option{background:linear-gradient(100deg,rgba(255,174,88,.12),rgba(176,150,255,.12))!important}
+.ultimate-option.is-selected{background:linear-gradient(100deg,rgba(255,174,88,.22),rgba(176,150,255,.19))!important}
+.pro-warning{display:none;margin-top:10px;padding:11px 12px;border:1px solid #f0a34c88;border-radius:10px;background:#f0a34c18;color:var(--text);font-size:11px;line-height:1.6}
+.pro-warning.show{display:block}
