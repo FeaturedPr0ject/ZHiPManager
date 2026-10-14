@@ -139,29 +139,38 @@ el('createBtn').addEventListener('click',async()=>{
    const nameBytes=encoder.encode(path);
    if(nameBytes.length>65535)throw new Error('File path is too long: '+path);
    const raw=input[item.path.replace(/^\/+|^\.\//,'')]||input[path];
-   let best=raw; let codec=0;
+   let best=raw; let codec=0; let codecLabel='raw';
    const originalCrc=crc32(raw);
    for(const compressionOptions of compressionRuns){
     const candidate=fflate.deflateSync(raw,compressionOptions);
-    if(candidate.length<best.length){best=candidate;codec=1;}
+    if(candidate.length<best.length){best=candidate;codec=1;codecLabel='DEFLATE level '+compressionOptions.level;}
    }
    if(compressionMode==='ultra'){
-    addLog('create','Comparing Zstandard level 19 against the best DEFLATE result for '+path+'.');
-    const candidate=zstd.compress(raw,19);
-    if(candidate.length<best.length){
+    let bestZstd=null;
+    let bestZstdLevel=0;
+    for(const level of [19,20,21,22]){
      try{
-      const decoded=zstd.decompress(candidate);
+      const candidate=zstd.compress(raw,level);
+      if(!bestZstd||candidate.length<bestZstd.length){bestZstd=candidate;bestZstdLevel=level;}
+      addLog('create','Zstandard level '+level+' produced '+formatBytes(candidate.length)+' for '+path+'.');
+     }catch(error){
+      addLog('create','Zstandard level '+level+' could not compress '+path+': '+(error&&error.message?error.message:'codec error')+'.','error');
+     }
+    }
+    if(bestZstd&&bestZstd.length<best.length){
+     try{
+      const decoded=zstd.decompress(bestZstd);
       if(decoded.length===raw.length&&crc32(decoded)===originalCrc){
-       best=candidate;codec=2;
-       addLog('create','Zstandard level 19 beat DEFLATE and passed round-trip CRC32 verification for '+path+'.','success');
+       best=bestZstd;codec=2;codecLabel='Zstandard level '+bestZstdLevel;
+       addLog('create','Zstandard level '+bestZstdLevel+' beat DEFLATE and passed round-trip CRC32 verification for '+path+'.','success');
       }else{
-       addLog('create','Zstandard candidate failed size or CRC32 verification; keeping the best verified DEFLATE/raw result for '+path+'.','error');
+       addLog('create','Best Zstandard candidate failed size or CRC32 verification; keeping '+codecLabel+' for '+path+'.','error');
       }
      }catch(error){
-      addLog('create','Zstandard candidate could not be verified; keeping the best DEFLATE/raw result for '+path+'.','error');
+      addLog('create','Best Zstandard candidate could not be verified; keeping '+codecLabel+' for '+path+'.','error');
      }
     }else{
-     addLog('create','Zstandard did not beat the best DEFLATE result for '+path+'; keeping the smaller candidate.');
+     addLog('create','Zstandard levels 19–22 did not beat '+codecLabel+' for '+path+'; keeping the smaller candidate.');
     }
    }
    const record=new Uint8Array(15+nameBytes.length);
@@ -174,7 +183,7 @@ el('createBtn').addEventListener('click',async()=>{
    record.set(nameBytes,15);
    chunks.push(record,best);
    archiveBytes+=record.length+best.length;
-   addLog('create','Processed '+path+': '+formatBytes(raw.length)+' → '+formatBytes(best.length)+'.');
+   addLog('create','Processed '+path+': '+formatBytes(raw.length)+' → '+formatBytes(best.length)+' ('+codecLabel+', '+best.length+' bytes).');
    original.textContent='Compressing… '+Math.round((i+1)/files.length*100)+'%';
   }
   const blob=new Blob(chunks,{type:'application/vnd.zhip'});
