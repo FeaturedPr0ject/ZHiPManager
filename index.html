@@ -72,7 +72,7 @@
 <div class="extract-drop" id="extractDrop">
 <div class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="m4 7.5 8 4.7 8-4.7M12 12.2V21"/></svg></div>
 <div class="extract-copy"><strong>Extract a native .zhip file</strong><span>Choose an archive to inspect its contents and download extracted files. Files stay on your device.</span></div>
-<div class="extract-actions"><input class="file-input" id="extractInput" type="file" accept=".zhip,application/octet-stream"><button class="secondary-btn" type="button" id="extractChoose">Choose archive</button><button class="secondary-btn hidden" type="button" id="convertZipBtn">Convert to ZIP</button><button class="secondary-btn" type="button" id="extractClear">Clear</button></div>
+<div class="extract-actions"><input class="file-input" id="extractInput" type="file" accept=".zhip,.zip,application/octet-stream"><button class="secondary-btn" type="button" id="extractChoose">Choose archive</button><button class="secondary-btn" type="button" id="extractClear">Clear</button></div><div class="settings-row"><div class="setting-copy"><strong>Convert archive format</strong><span>Convert a ZHIP archive to standard ZIP after opening it.</span></div><div class="select-wrap"><select id="convertFormat" aria-label="Convert archive format"><option value="zip" selected>ZHIP → ZIP</option></select></div><button class="secondary-btn" type="button" id="convertZipBtn" disabled>Convert</button></div>
 </div>
 <div class="extract-progress hidden" id="extractProgress"><div id="extractProgressFill"></div></div>
 <div class="extract-summary" id="extractSummary">No archive selected.</div>
