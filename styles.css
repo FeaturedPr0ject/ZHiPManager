@@ -194,4 +194,4 @@ input:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid 
 
 .pro-unlock-row{margin-top:12px;margin-bottom:16px;gap:14px}
 .pro-unlock-row[hidden]{display:none}
-.settings-row{margin-top:0}
+.settings-row{margin-top:18px}
