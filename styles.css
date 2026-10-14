@@ -143,3 +143,8 @@ input:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid 
 @media(prefers-color-scheme:light){
  :root:not([data-theme="dark"]):not([data-theme="light"]) .glass-select-menu{box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 18px 40px rgba(55,78,125,.16),0 0 0 1px rgba(255,255,255,.5)}
 }
+
+.ultra-option{background:linear-gradient(105deg,rgba(176,150,255,.12),rgba(112,224,208,.09))!important}
+.ultra-option>span:first-child{letter-spacing:.25px}
+.ultra-option.is-selected{background:linear-gradient(105deg,rgba(151,180,255,.23),rgba(168,139,255,.14),rgba(112,224,208,.1))!important}
+.ultra-option small{max-width:100%;white-space:normal}
