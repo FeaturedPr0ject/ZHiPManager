@@ -49,7 +49,7 @@ self.onmessage=async event=>{
     const candidate=fflate.deflateSync(raw,options);
     if(candidate.length<best.length){best=candidate;codec=1;label='DEFLATE level '+options.level;}
    }
-   if(mode==='ultra'){
+   if(mode==='ultra'||mode==='ultimate'){
     let zbest=null,zlevel=0;
     for(const level of [19,20,21,22]){
      try{
