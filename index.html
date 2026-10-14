@@ -72,14 +72,26 @@
 <div class="extract-drop" id="extractDrop">
 <div class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="m4 7.5 8 4.7 8-4.7M12 12.2V21"/></svg></div>
 <div class="extract-copy"><strong>Extract a native .zhip file</strong><span>Choose an archive to inspect its contents and download extracted files. Files stay on your device.</span></div>
-<div class="extract-actions"><input class="file-input" id="extractInput" type="file" accept=".zhip,.zip,application/octet-stream"><button class="secondary-btn" type="button" id="extractChoose">Choose archive</button><button class="secondary-btn" type="button" id="extractClear">Clear</button></div><div class="settings-row"><div class="setting-copy"><strong>Convert archive format</strong><span>Convert a ZHIP archive to standard ZIP after opening it.</span></div><div class="select-wrap"><select id="convertFormat" aria-label="Convert archive format"><option value="zip" selected>ZHIP → ZIP</option></select></div><button class="secondary-btn" type="button" id="convertZipBtn" disabled>Convert</button></div>
+<div class="extract-actions"><input class="file-input" id="extractInput" type="file" accept=".zhip,.zip,application/octet-stream"><button class="secondary-btn" type="button" id="extractChoose">Choose archive</button><button class="secondary-btn" type="button" id="extractClear">Clear</button></div>
 </div>
 <div class="extract-progress hidden" id="extractProgress"><div id="extractProgressFill"></div></div>
 <div class="extract-summary" id="extractSummary">No archive selected.</div>
 <div class="extract-list" id="extractList"><div class="empty-state"><div class="empty-symbol">↧</div><div>Select a .zhip archive to view its contents.</div></div></div>
-<div class="extract-hint">ZHiPManager uses its own ZHIP v2 hybrid container and verifies signed ZHIP v3 archives. Open a ZHIP archive, then choose Convert to ZIP to download its contents as a standard ZIP file. Large archives may require extra browser memory.</div>
+<div class="extract-hint">ZHiPManager uses its own ZHIP v2 hybrid container and verifies signed ZHIP v3 archives. Large archives may require extra browser memory.</div>
 <div class="message" id="extractMessage" role="status" aria-live="polite"></div>
 <div class="activity-log"><div class="activity-log-head"><strong>Extraction log</strong><span id="extractLogCount">0 events</span></div><div class="activity-log-list" id="extractLog" aria-live="polite"><div class="activity-empty">Extraction activity will appear here.</div></div></div>
+</div>
+</section>
+
+<section class="card extract-card convert-card">
+<div class="card-head"><h2>Convert archive format</h2><span class="step">STEP 03 — CONVERT</span></div>
+<div class="extract-content">
+<div class="extract-drop">
+<div class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="M8 12h8m-3-3 3 3-3 3"/></svg></div>
+<div class="extract-copy"><strong>Convert ZHIP to ZIP</strong><span>Open a ZHIP archive in Step 02 first, then convert its contents into a standard .zip file.</span></div>
+<div class="extract-actions"><div class="select-wrap"><select id="convertFormat" aria-label="Convert archive format"><option value="zip" selected>ZHIP → ZIP</option></select></div><button class="secondary-btn" type="button" id="convertZipBtn" disabled>Convert to ZIP</button></div>
+</div>
+<div class="extract-hint">The conversion uses the files read from the opened archive. Verify the contents in Step 02 before converting.</div>
 </div>
 </section>
 
