@@ -20,7 +20,7 @@
 <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="m4 7.5 8 4.7 8-4.7M12 12.2V21"/><path d="m9.5 5 8 4.5"/></svg></div>
 <div><div class="brand-name">ZHiP<span>Manager</span></div><div class="brand-sub">Zone Hybrid Improvement Plan</div></div>
 </a>
-<div class="top-right"><button class="theme-toggle secondary-btn" type="button" id="themeToggle" aria-label="Switch theme" title="Switch light/dark theme">◐ <span id="themeLabel">Auto</span></button><div class="local-pill"><span class="dot"></span> Local processing</div><div class="limit-pill">400 MB limit</div></div>
+<div class="top-right"><button class="theme-toggle secondary-btn" type="button" id="themeToggle" aria-label="Switch theme" title="Switch light/dark theme">◐ <span id="themeLabel">Auto</span></button><div class="local-pill"><span class="dot"></span> Local processing</div><div class="limit-pill" id="limitPill">400 MB limit</div></div>
 </header>
 <section class="hero">
 <div class="eyebrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9z"/></svg> SIMPLE. PRIVATE. ORGANIZED.</div>
@@ -50,7 +50,7 @@
 <button type="button" class="glass-select-option ultra-option" role="option" data-value="ultra" aria-selected="false"><span>ULTRA ZSTD</span><small>Zstandard levels 19–22 · CRC checked</small><span class="option-check" aria-hidden="true">✓</span></button>
 <button type="button" class="glass-select-option ultimate-option" role="option" data-value="ultimate" aria-selected="false"><span>Ultimate ZSTD · Pro</span><small id="ultimateProNote">Requires Pro code</small><span class="option-check" aria-hidden="true">✓</span></button>
 </div></div></div>
-<div class="meter"><div class="meter-head"><span>Input size</span><strong id="sizeLabel">0 B / 400 MB</strong></div><div class="track"><div class="track-fill" id="sizeBar"></div></div><div class="meter-caption"><span id="percentLabel">Ready when you are</span><span><span id="maxLimitLabel">400 MB maximum</span></div></div>
+<div class="meter"><div class="meter-head"><span>Input size</span><strong id="sizeLabel">0 B / 400 MB</strong></div><div class="track"><div class="track-fill" id="sizeBar"></div></div><div class="meter-caption"><span id="percentLabel">Ready when you are</span><span id="maxLimitLabel">400 MB maximum</span></div></div>
 <button class="primary-btn" id="createBtn" type="button" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-4-4 4 4 4-4"/><path d="M5 16v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg><span id="createText">Create .zhip archive</span></button>
 <div class="message" id="message" role="status" aria-live="polite"></div>
 <div class="pro-warning" id="proWarning" role="alert">Warning: Ultimate ZSTD may use substantial memory and CPU. The browser may become unresponsive or run out of memory. Verify the archive before deleting or modifying originals.</div>
