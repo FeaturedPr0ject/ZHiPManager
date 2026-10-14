@@ -1,6 +1,6 @@
 const MAGIC: &[u8; 4] = b"ZHRX";
 const VERSION: u8 = 1;
-const HEADER_LEN: usize = 17;
+const HEADER_LEN: usize = 18;
 
 fn crc32(data: &[u8]) -> u32 {
     let mut crc = 0xffff_ffffu32;
