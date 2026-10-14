@@ -24,7 +24,7 @@ self.onmessage=async event=>{
  try{
   const runs=mode==='fast'?[{level:1}]:mode==='smart'?[{level:1},{level:6}]:[{level:1},{level:6},{level:9}];
   let zstd=null;
-  if(mode==='ultra'){
+  if(mode==='ultra'||mode==='ultimate'){
    self.postMessage({type:'status',message:'Loading Zstandard WebAssembly engine…'});
    const module=await import('https://cdn.jsdelivr.net/npm/@bokuweb/zstd-wasm@0.0.27/+esm');
    await module.init('https://cdn.jsdelivr.net/npm/@bokuweb/zstd-wasm@0.0.27/dist/web/zstd.wasm');
@@ -33,7 +33,7 @@ self.onmessage=async event=>{
   const encoder=new TextEncoder();
   const chunks=[];
   const header=new Uint8Array(9);
-  const version=mode==='ultra'?4:2;
+  const version=(mode==='ultra'||mode==='ultimate')?4:2;
   header.set([90,72,73,80,version],0);
   new DataView(header.buffer).setUint32(5,files.length,true);
   chunks.push(header);
