@@ -284,5 +284,19 @@ themeToggle.addEventListener('click',()=>{
  applyTheme(themeMode);
 });
 
+
+const glassInteractiveNodes=document.querySelectorAll('.choose-btn,.primary-btn,.secondary-btn,.select-wrap select,.theme-toggle,.local-pill,.limit-pill');
+glassInteractiveNodes.forEach(node=>{
+ node.addEventListener('pointermove',event=>{
+  const bounds=node.getBoundingClientRect();
+  node.style.setProperty('--pointer-x',((event.clientX-bounds.left)/Math.max(1,bounds.width)*100)+'%');
+  node.style.setProperty('--pointer-y',((event.clientY-bounds.top)/Math.max(1,bounds.height)*100)+'%');
+ });
+ node.addEventListener('pointerleave',()=>{
+  node.style.setProperty('--pointer-x','50%');
+  node.style.setProperty('--pointer-y','0%');
+ });
+});
+
 render();
 })();
