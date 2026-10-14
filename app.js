@@ -198,7 +198,7 @@ el('createBtn').addEventListener('click',async()=>{
    input[key]=new Uint8Array(await item.file.arrayBuffer());
    original.textContent='Reading files… '+Math.round((i+1)/files.length*100)+'%';
   }
-  const cacheItems=files.map(item=>({path:item.path,bytes:input[item.path.replace(/^\\/+|^\\.\\//,'')]||input[item.path]}));
+  const cacheItems=files.map(item=>({path:item.path,bytes:input[item.path.replace(/^\/+|^\.\//,'')]||input[item.path]}));
   const cacheKey=await archiveCacheKey(cacheItems,compressionMode);
   let cachedArchive=await localCacheGet(cacheKey);
   if(cachedArchive){addLog('create','Local CHC cache hit. Skipping compression.','success');}
@@ -217,7 +217,7 @@ el('createBtn').addEventListener('click',async()=>{
   showMessage('Compressing '+files.length+' file(s)… the interface will stay responsive.','ok');
   addLog('create','Compression moved to a background Web Worker.');
   original.textContent='Compressing…';
-  const workerFiles=files.map(item=>({path:item.path.replace(/^\\/+|^\\.\\//,''),buffer:(input[item.path.replace(/^\\/+|^\\.\\//,'')]||input[item.path]).buffer}));
+  const workerFiles=files.map(item=>({path:item.path.replace(/^\/+|^\.\//,''),buffer:(input[item.path.replace(/^\/+|^\.\//,'')]||input[item.path]).buffer}));
   const worker=new Worker('compression-worker.js');
   const transfer=workerFiles.map(item=>item.buffer);
   const result=await new Promise((resolve,reject)=>{
