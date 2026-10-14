@@ -10,7 +10,8 @@
 - Custom archive name with Fast, Smart hybrid, Maximum DEFLATE, and ULTRA ZSTD modes
 - ULTRA ZSTD uses the Zstandard WebAssembly codec at compression level 19 and verifies compressed output with CRC-32 before storing it
 - Creates ZHIP v2 archives for DEFLATE modes and ZHIP v4 archives for ULTRA ZSTD; reads existing ZHIP v1–v4 archives and verifies legacy signed v3 archives
-- Per-file hybrid selection: tests DEFLATE levels and keeps the smallest result; stores original bytes if compression would increase size
+- Progressive per-file compression tiers: Fast tests DEFLATE level 1; Smart tests levels 1 and 6; Maximum tests levels 1, 6, and 9; ULTRA compares those DEFLATE candidates with Zstandard level 19
+- Each higher tier includes every candidate tested by the previous tier, so the stored archive payload cannot get larger when moving to a stronger tier for the same input; original bytes are kept when compression does not help
 - CRC-32 integrity checks
 - Optional ECDSA P-256 / SHA-256 digital signature and verification
 - Visible timestamped logs for compression and extraction progress, per-file results, and errors
@@ -45,7 +46,7 @@ Each entry is stored sequentially as a 15-byte record header, UTF-8 path, then p
 | Path | Variable | UTF-8 relative path |
 | Payload | Variable | Original bytes for codec `0`; raw DEFLATE for codec `1` |
 
-The container uses DEFLATE directly through `fflate.deflateSync` / `fflate.inflateSync`; it does not call ZIP archive functions. Smart hybrid mode compares levels 1, 6, and 9 per file and picks the smallest result. If the compressed result is not smaller than the original, the payload is stored as-is to prevent compression overhead from inflating that file. Signed ZHIP v3 archives use ECDSA P-256 digital signatures with SHA-256. Unsigned archives use ZHIP v2. The signature trailer is `SIGZ` (4 bytes), public-key length (uint16), signature length (uint16), DER/SPKI public key, then signature bytes. The signature covers every preceding archive byte. Verification proves integrity relative to the embedded key, but does not by itself prove the signer’s real-world identity; compare the fingerprint through a trusted channel. The reader also supports ZHIP v1 and v2. ZIP files are not accepted.
+The container uses DEFLATE directly through `fflate.deflateSync` / `fflate.inflateSync`; it does not call ZIP archive functions. The compression tiers use nested candidate sets: Fast tests DEFLATE level 1; Smart tests levels 1 and 6; Maximum tests levels 1, 6, and 9; ULTRA tests all three DEFLATE candidates plus Zstandard level 19. Each tier keeps the smallest candidate, including the original bytes as a fallback. This makes the stored payload size non-increasing from Fast to Smart to Maximum to ULTRA for the same inputs, though some file types cannot be compressed smaller. Signed ZHIP v3 archives use ECDSA P-256 digital signatures with SHA-256. Unsigned archives use ZHIP v2. The signature trailer is `SIGZ` (4 bytes), public-key length (uint16), signature length (uint16), DER/SPKI public key, then signature bytes. The signature covers every preceding archive byte. Verification proves integrity relative to the embedded key, but does not by itself prove the signer’s real-world identity; compare the fingerprint through a trusted channel. The reader also supports ZHIP v1 and v2. ZIP files are not accepted.
 
 
 ## ZHIP v4 (Zstandard codec)
@@ -57,7 +58,7 @@ The entry codec byte is:
 - `1` — raw DEFLATE
 - `2` — Zstandard frame, compressed and decompressed with `@bokuweb/zstd-wasm`
 
-Each entry retains the original byte length and CRC-32. During creation, ZHiPManager decompresses a Zstandard candidate and verifies both size and CRC-32 before storing it. If Zstandard does not make an entry smaller, the original bytes are stored instead. The reader continues to support ZHIP v1–v3.
+Each entry retains the original byte length and CRC-32. During creation, ZHiPManager decompresses a Zstandard candidate and verifies both size and CRC-32 before storing it. Zstandard is selected only when it beats the best DEFLATE result and passes size and CRC-32 verification; otherwise the best DEFLATE result or original bytes are stored. The reader continues to support ZHIP v1–v3.
 
 ## Deployment
 
