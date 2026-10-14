@@ -153,7 +153,7 @@ function render(){
  el('sizeLabel').textContent=formatBytes(total)+' / '+(isPro()?'800 MB':'400 MB');
  el('sizeBar').style.width=Math.min(100,total/maxBytes*100)+'%';
  el('sizeBar').style.background=over?'var(--danger)':'linear-gradient(90deg,#7898ff,#70e0d0)';
- el('percentLabel').textContent=over?'Limit exceeded':files.length?Math.min(100,total/MAX_BYTES*100).toFixed(1)+'% of limit':'Ready when you are';
+ el('percentLabel').textContent=over?'Limit exceeded':files.length?Math.min(100,total/maxBytes*100).toFixed(1)+'% of limit':'Ready when you are';
  el('createBtn').disabled=busy||!files.length||over||!window.fflate;
  el('createText').textContent=busy?'Creating your archive…':!window.fflate?'Compression library unavailable':'Create .zhip archive';
  el('clearBtn').disabled=busy;
@@ -204,9 +204,9 @@ el('createBtn').addEventListener('click',async()=>{
   }
   const cacheItems=files.map(item=>({path:item.path,bytes:input[item.path.replace(/^\/+|^\.\//,'')]||input[item.path]}));
   const cacheKey=await archiveCacheKey(cacheItems,compressionMode);
-  let cachedArchive=await localCacheGet(cacheKey);
+  let cachedArchive=proJob?null:await localCacheGet(cacheKey);
   if(cachedArchive){addLog('create','Local CHC cache hit. Skipping compression.','success');}
-  else{
+  else if(!proJob){
    addLog('create','Local cache miss; checking shared Supabase cache.');
    cachedArchive=await cloudCacheGet(cacheKey);
    if(cachedArchive){addLog('create','Shared Supabase CHC cache hit.','success');await localCachePut(cacheKey,cachedArchive);}
@@ -242,9 +242,15 @@ el('createBtn').addEventListener('click',async()=>{
   }).finally(()=>worker.terminate());
   const blob=new Blob([result.buffer],{type:'application/vnd.zhip'});
   downloadArchive(blob,archiveName);
-  await localCachePut(cacheKey,blob);
-  addLog('create','Saved a local CHC cache entry with a 48-hour expiry.','success');
-  await cloudCachePut(cacheKey,blob);
+  if(proJob){
+   await removeLocalCache(cacheKey);
+   await clearCloudCache(cacheKey);
+   addLog('create','Pro job finished: removed this job’s local and cloud cache.','success');
+  }else{
+   await localCachePut(cacheKey,blob);
+   addLog('create','Saved a local CHC cache entry with a 48-hour expiry.','success');
+   await cloudCachePut(cacheKey,blob);
+  }
   const archiveVersion=result.version;
   const ratio=total?Math.max(0,(1-blob.size/total)*100):0;
 
