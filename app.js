@@ -501,20 +501,29 @@ document.addEventListener('focusin',event=>{
 });
 syncCompressionValue();
 
-el('proCodeBtn').addEventListener('click',async()=>{
- if(isPro()){toast('Pro is already unlocked for this tab');return;}
- const code=window.prompt('Enter your Pro code to unlock 800 MB and Ultimate ZSTD:');
- if(code===null||!code.trim())return;
- el('proCodeBtn').disabled=true;
+const proModal=el('proModal'),proCodeInput=el('proCodeInput'),proCodeForm=el('proCodeForm');
+function closeProModal(){proModal.hidden=true;proCodeInput.value='';el('proModalError').textContent='';el('proModalError').classList.remove('show');el('proCodeBtn').focus();}
+function openProModal(){if(isPro()){toast('Pro is already unlocked for this tab');return;}proModal.hidden=false;el('proModalError').textContent='';el('proModalError').classList.remove('show');proCodeInput.value='';setTimeout(()=>proCodeInput.focus(),0);}
+el('proCodeBtn').addEventListener('click',openProModal);
+el('proModalClose').addEventListener('click',closeProModal);
+el('proModalCancel').addEventListener('click',closeProModal);
+proModal.addEventListener('click',event=>{if(event.target===proModal)closeProModal();});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!proModal.hidden)closeProModal();});
+proCodeForm.addEventListener('submit',async event=>{
+ event.preventDefault();
+ const code=proCodeInput.value.trim();
+ if(!code)return;
+ const submit=el('proModalSubmit');
+ submit.disabled=true;submit.textContent='Checking…';el('proModalError').textContent='';el('proModalError').classList.remove('show');
  try{
   const valid=await validateProCode(code);
-  if(!valid){showMessage('Invalid Pro code. Please check the code and try again.','error');return;}
+  if(!valid){el('proModalError').textContent='Invalid code. Check it and try again.';el('proModalError').classList.add('show');proCodeInput.focus();return;}
   proUnlocked=true;
-  syncProUi();render();
+  closeProModal();syncProUi();render();
   showMessage('Pro unlocked for this tab: 800 MB and Ultimate ZSTD are now available.','ok');
   addLog('create','Pro plan unlocked for this browser tab.','success');
- }catch(error){showMessage('Could not validate the Pro code. Check your connection and try again.','error');}
- finally{el('proCodeBtn').disabled=false;}
+ }catch(error){el('proModalError').textContent='Could not connect to the validation server. Try again.';el('proModalError').classList.add('show');}
+ finally{submit.disabled=false;submit.textContent='Unlock Pro';}
 });
 el('compression').addEventListener('change',()=>{
  const mode=el('compression').value;
