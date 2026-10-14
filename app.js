@@ -519,7 +519,7 @@ el('proCodeBtn').addEventListener('click',async()=>{
 el('compression').addEventListener('change',()=>{
  const mode=el('compression').value;
  el('proWarning').classList.toggle('show',mode==='ultimate');
- if(mode==='ultimate'&&!isPro()){showMessage('Ultimate ZSTD is a Pro feature. Enter your Pro code first.','error');el('compression').value='smart';syncCompressionValue();}
+ if(mode==='ultimate'&&!isPro()){showMessage('Ultimate ZSTD is a Pro feature. Enter your Pro code first.','error');el('compression').value='smart';el('proWarning').classList.remove('show');syncCompressionValue();}
 });
 
 render();
