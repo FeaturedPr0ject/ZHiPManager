@@ -298,5 +298,18 @@ glassInteractiveNodes.forEach(node=>{
  });
 });
 
+const jellyButtons=document.querySelectorAll('.choose-btn,.primary-btn,.secondary-btn,.theme-toggle');
+jellyButtons.forEach(button=>{
+ button.addEventListener('click',()=>{
+  if(button.disabled)return;
+  button.classList.remove('jelly-trigger');
+  void button.offsetWidth;
+  button.classList.add('jelly-trigger');
+ });
+ button.addEventListener('animationend',event=>{
+  if(event.animationName==='jellyPress')button.classList.remove('jelly-trigger');
+ });
+});
+
 render();
 })();
