@@ -157,3 +157,6 @@ input:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid 
 .glass-select-option.is-selected .option-check{opacity:1;visibility:visible}
 .ultra-option:not(.is-selected){background:transparent!important;border-color:transparent!important;box-shadow:none!important}
 .ultra-option.is-selected{background:linear-gradient(100deg,rgba(151,180,255,.2),rgba(168,139,255,.11),rgba(112,224,208,.08))!important}
+
+.ultra-option>span:first-child{letter-spacing:.25px}
+.ultra-option small{max-width:100%;white-space:nowrap}
