@@ -5,6 +5,83 @@ const files=[];
 const el=id=>document.getElementById(id);
 const dropzone=el('dropzone'),fileInput=el('fileInput'),folderInput=el('folderInput'),fileList=el('fileList');
 let busy=false;
+
+const CACHE_TTL=48*60*60*1000;
+const CACHE_LIMIT=20*1024*1024;
+const CACHE_API='https://vbmngpqaoerptdgbhqsm.supabase.co/functions/v1/cache-gateway';
+function openCacheDb(){
+ return new Promise((resolve,reject)=>{
+  const request=indexedDB.open('zhipmanager-cache',1);
+  request.onupgradeneeded=()=>request.result.createObjectStore('archives',{keyPath:'key'});
+  request.onsuccess=()=>resolve(request.result);
+  request.onerror=()=>reject(request.error);
+ });
+}
+async function localCacheGet(key){
+ try{
+  const db=await openCacheDb();
+  const entry=await new Promise((resolve,reject)=>{
+   const request=db.transaction('archives','readonly').objectStore('archives').get(key);
+   request.onsuccess=()=>resolve(request.result||null);
+   request.onerror=()=>reject(request.error);
+  });
+  if(!entry)return null;
+  if(!entry.expiresAt||entry.expiresAt<=Date.now()){
+   db.transaction('archives','readwrite').objectStore('archives').delete(key);
+   return null;
+  }
+  return entry.blob instanceof Blob?entry.blob:null;
+ }catch(error){console.warn('Local cache unavailable',error);return null;}
+}
+async function localCachePut(key,blob){
+ try{
+  const db=await openCacheDb();
+  await new Promise((resolve,reject)=>{
+   const request=db.transaction('archives','readwrite').objectStore('archives').put({key,blob,expiresAt:Date.now()+CACHE_TTL});
+   request.onsuccess=resolve;request.onerror=()=>reject(request.error);
+  });
+  db.close();
+ }catch(error){console.warn('Could not save local cache',error);}
+}
+async function archiveCacheKey(items,mode){
+ const encoder=new TextEncoder();
+ const parts=[encoder.encode('ZHiPManager-CHC-v1\0'+mode)];
+ for(const item of items){
+  const path=encoder.encode(item.path);
+  const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',item.bytes));
+  parts.push(path,new Uint8Array([0]),digest);
+ }
+ const length=parts.reduce((sum,part)=>sum+part.length,0);
+ const joined=new Uint8Array(length);let offset=0;
+ for(const part of parts){joined.set(part,offset);offset+=part.length;}
+ const hash=new Uint8Array(await crypto.subtle.digest('SHA-256',joined));
+ return Array.from(hash,value=>value.toString(16).padStart(2,'0')).join('');
+}
+async function cloudCacheGet(key){
+ try{
+  const response=await fetch(CACHE_API+'?key='+key,{headers:{'X-Cache-Key':key}});
+  if(!response.ok)return null;
+  const bytes=new Uint8Array(await response.arrayBuffer());
+  if(bytes.length<4||bytes[0]!==67||bytes[1]!==72||bytes[2]!==67||bytes[3]!==1)return null;
+  return new Blob([bytes.slice(4)],{type:'application/vnd.zhip'});
+ }catch(error){console.warn('Cloud cache unavailable',error);return null;}
+}
+async function cloudCachePut(key,blob){
+ if(blob.size+4>CACHE_LIMIT)return;
+ try{
+  const bytes=new Uint8Array(await blob.arrayBuffer());
+  const payload=new Uint8Array(bytes.length+4);
+  payload.set([67,72,67,1],0);payload.set(bytes,4);
+  await fetch(CACHE_API,{method:'POST',headers:{'Content-Type':'application/vnd.zhipmanager.cache','X-Cache-Key':key},body:payload});
+ }catch(error){console.warn('Cloud cache upload skipped',error);}
+}
+function downloadArchive(blob,name){
+ const url=URL.createObjectURL(blob);
+ const anchor=document.createElement('a');anchor.href=url;anchor.download=name+'.zhip';
+ document.body.append(anchor);anchor.click();anchor.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
+
 function crc32(data){
  const table=crc32.table||(crc32.table=(()=>{
   const values=new Uint32Array(256);
@@ -121,6 +198,22 @@ el('createBtn').addEventListener('click',async()=>{
    input[key]=new Uint8Array(await item.file.arrayBuffer());
    original.textContent='Reading files… '+Math.round((i+1)/files.length*100)+'%';
   }
+  const cacheItems=files.map(item=>({path:item.path,bytes:input[item.path.replace(/^\\/+|^\\.\\//,'')]||input[item.path]}));
+  const cacheKey=await archiveCacheKey(cacheItems,compressionMode);
+  let cachedArchive=await localCacheGet(cacheKey);
+  if(cachedArchive){addLog('create','Local CHC cache hit. Skipping compression.','success');}
+  else{
+   addLog('create','Local cache miss; checking shared Supabase cache.');
+   cachedArchive=await cloudCacheGet(cacheKey);
+   if(cachedArchive){addLog('create','Shared Supabase CHC cache hit.','success');await localCachePut(cacheKey,cachedArchive);}
+  }
+  if(cachedArchive){
+   downloadArchive(cachedArchive,archiveName);
+   showMessage('Cache hit! '+archiveName+'.zhip was restored from a verified content-keyed cache.','ok');
+   addLog('create','Downloaded cached archive ('+formatBytes(cachedArchive.size)+').','success');
+   toast('Cached archive is ready');
+   return;
+  }
   showMessage('Compressing '+files.length+' file(s)… keep this tab open.','ok');addLog('create','Compression started.');
   original.textContent='Compressing…';
   await new Promise(resolve=>setTimeout(resolve,30));
@@ -187,7 +280,10 @@ el('createBtn').addEventListener('click',async()=>{
    original.textContent='Compressing… '+Math.round((i+1)/files.length*100)+'%';
   }
   const blob=new Blob(chunks,{type:'application/vnd.zhip'});
-  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=archiveName+'.zhip';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+  downloadArchive(blob,archiveName);
+  await localCachePut(cacheKey,blob);
+  addLog('create','Saved a local CHC cache entry with a 48-hour expiry.','success');
+  await cloudCachePut(cacheKey,blob);
   const ratio=total?Math.max(0,(1-blob.size/total)*100):0;
   showMessage('Done! '+archiveName+'.zhip was created ('+formatBytes(blob.size)+'). This archive uses the native ZHIP v'+archiveVersion+' container. It is not ZIP.','ok');
   addLog('create','Created '+archiveName+'.zhip (ZHIP v'+archiveVersion+', '+formatBytes(blob.size)+').','success');
