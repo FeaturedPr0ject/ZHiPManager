@@ -29,7 +29,7 @@ fn run() -> Result<(), String> {
         }
         "unpack" => {
             let output_path = args.get(3).cloned().unwrap_or_else(|| {
-                input_path.strip_suffix(".zhip").or_else(|| input_path.strip_suffix(".ZH​​IP"))
+                input_path.strip_suffix(".zhip").or_else(|| input_path.strip_suffix(".ZHIP"))
                     .map(str::to_string).unwrap_or_else(|| format!("{input_path}.out"))
             });
             let unpacked = zhipx::decompress(&input)?;
