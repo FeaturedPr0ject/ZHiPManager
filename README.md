@@ -6,7 +6,7 @@
 
 - Responsive interface for desktop and mobile
 - Drag-and-drop or multi-file selection
-- Combined input limit of 400 MiB
+- Combined input limit of 400 MiB for standard mode; Pro code unlocks an 800 MiB input limit
 - Custom archive name with Fast, Smart hybrid, Maximum DEFLATE, and ULTRA ZSTD modes
 - ULTRA ZSTD tests Zstandard levels 19–22, compares the smallest Zstandard candidate against the best DEFLATE result, and verifies selected Zstandard output with CRC-32 before storing it
 - Creates ZHIP v2 archives for DEFLATE modes and ZHIP v4 archives for ULTRA ZSTD; reads existing ZHIP v1–v4 archives and verifies legacy signed v3 archives
@@ -18,6 +18,7 @@
 - Application JavaScript is separated into `app.js`
 - Compression runs in a dedicated Web Worker so the page stays responsive during CPU-heavy work
 - Content-addressed CHC archive cache: IndexedDB on the current browser and optional shared Supabase Storage cache across devices
+- Pro-only Ultimate ZSTD mode with a prominent high-memory / potential corruption warning; Pro jobs bypass caching and remove their matching local/cloud cache entry after completion
 - Cache entries expire after 48 hours; shared cache uploads are limited to 20 MiB, and only generated archive cache data is uploaded
 - Cache keys use SHA-256 hashes of file contents, paths, and compression mode to avoid reusing a cache for different inputs
 - Original selected files are processed locally; cloud cache stores only generated archive results
