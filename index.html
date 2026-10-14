@@ -44,7 +44,7 @@
 <div class="file-toolbar"><span class="section-label">Selected files</span><div style="display:flex;gap:8px;align-items:center"><span class="file-count" id="fileCount">0 files</span><button class="text-btn" id="clearBtn" type="button">Clear all</button></div></div>
 <div class="file-list" id="fileList"><div class="empty-state"><div class="empty-symbol">＋</div><div><strong style="display:block;color:#b0bfd5;font-size:11px;margin-bottom:4px">Your archive starts here</strong>Choose one or more files to see them listed here.</div></div></div>
 <div class="name-field"><label for="archiveName" class="field-label">Archive name</label><div class="name-wrap"><input id="archiveName" type="text" value="MyArchive" maxlength="100" autocomplete="off" spellcheck="false" aria-label="Archive name"><span class="suffix">.zhip</span></div></div>
-<div class="settings-row"><div class="setting-copy"><strong>Compression level</strong><span>Higher compression may take longer.</span></div><div class="select-wrap"><select id="compression" aria-label="Compression level"><option value="1">Fast</option><option value="6" selected>Balanced</option><option value="9">Maximum</option></select></div></div>
+<div class="settings-row"><div class="setting-copy"><strong>Compression level</strong><span>Smart hybrid compares compression levels and avoids expanding files.</span></div><div class="select-wrap"><select id="compression" aria-label="Compression level"><option value="fast">Fast</option><option value="smart" selected>Smart hybrid</option><option value="9">Maximum DEFLATE</option></select></div></div>
 <div class="meter"><div class="meter-head"><span>Input size</span><strong id="sizeLabel">0 B / 400 MB</strong></div><div class="track"><div class="track-fill" id="sizeBar"></div></div><div class="meter-caption"><span id="percentLabel">Ready when you are</span><span>400 MB maximum</span></div></div>
 <button class="primary-btn" id="createBtn" type="button" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-4-4 4 4 4-4"/><path d="M5 16v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg><span id="createText">Create .zhip archive</span></button>
 <div class="message" id="message" role="status" aria-live="polite"></div>
@@ -76,7 +76,7 @@
 <div class="extract-progress hidden" id="extractProgress"><div id="extractProgressFill"></div></div>
 <div class="extract-summary" id="extractSummary">No archive selected.</div>
 <div class="extract-list" id="extractList"><div class="empty-state"><div class="empty-symbol">↧</div><div>Select a .zhip archive to view its contents.</div></div></div>
-<div class="extract-hint">ZHiPManager uses its own ZHIP v1 container with DEFLATE-compressed entries. ZIP files are not supported by this native-format reader. Large archives may require extra browser memory.</div>
+<div class="extract-hint">ZHiPManager uses its own ZHIP v2 hybrid container. It tests DEFLATE levels and stores each file raw if compression cannot make it smaller. The reader also supports existing ZHIP v1 archives; ZIP files are not supported. Large archives may require extra browser memory.</div>
 <div class="message" id="extractMessage" role="status" aria-live="polite"></div>
 </div>
 </section>
@@ -161,7 +161,7 @@ el('createBtn').addEventListener('click',async()=>{
  if(!window.fflate){showMessage('The compression library did not load. Check your internet connection and reload the page.','error');return;}
  const total=totalSize();if(total>MAX_BYTES){showMessage('The total input must not exceed 400 MB.','error');return;}
  const archiveName=safeName(el('archiveName').value);
- const level=Number(el('compression').value);
+ const compressionMode=el('compression').value; const levels=compressionMode==='fast'?[1]:compressionMode==='9'?[9]:[1,6,9];
  busy=true;clearMessage();render();
  const button=el('createBtn'),original=el('createText');
  try{
@@ -180,7 +180,7 @@ el('createBtn').addEventListener('click',async()=>{
   const encoder=new TextEncoder();
   const chunks=[];
   const header=new Uint8Array(9);
-  header.set([90,72,73,80,1],0);
+  header.set([90,72,73,80,2],0);
   new DataView(header.buffer).setUint32(5,files.length,true);
   chunks.push(header);
   let archiveBytes=header.length;
@@ -191,21 +191,23 @@ el('createBtn').addEventListener('click',async()=>{
    const nameBytes=encoder.encode(path);
    if(nameBytes.length>65535)throw new Error('File path is too long: '+path);
    const raw=input[item.path.replace(/^\/+|^\.\//,'')]||input[path];
-   const compressed=fflate.deflateSync(raw,{level});
-   const record=new Uint8Array(14+nameBytes.length);
+   let best=raw; let codec=0;
+   for(const candidateLevel of levels){const candidate=fflate.deflateSync(raw,{level:candidateLevel});if(candidate.length<best.length){best=candidate;codec=1;}}
+   const record=new Uint8Array(15+nameBytes.length);
    const view=new DataView(record.buffer);
    view.setUint16(0,nameBytes.length,true);
    view.setUint32(2,raw.length,true);
-   view.setUint32(6,compressed.length,true);
+   view.setUint32(6,best.length,true);
    view.setUint32(10,crc32(raw),true);
-   record.set(nameBytes,14);
-   chunks.push(record,compressed);
-   archiveBytes+=record.length+compressed.length;
+   record[14]=codec;
+   record.set(nameBytes,15);
+   chunks.push(record,best);
+   archiveBytes+=record.length+best.length;
    original.textContent='Compressing… '+Math.round((i+1)/files.length*100)+'%';
   }
   const blob=new Blob(chunks,{type:'application/vnd.zhip'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=archiveName+'.zhip';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
-  showMessage('Done! '+archiveName+'.zhip was created ('+formatBytes(blob.size)+'). This archive uses the native ZHIP v1 container with individually DEFLATE-compressed files, not ZIP.','ok');
+  showMessage('Done! '+archiveName+'.zhip was created ('+formatBytes(blob.size)+'). This archive uses the native ZHIP v2 hybrid container, selecting the smallest of tested DEFLATE levels or storing a file unchanged when compression would make it larger. It is not ZIP.','ok');
   toast('Your .zhip archive is ready');
  }catch(error){console.error(error);showMessage('Could not create the archive: '+(error&&error.message?error.message:'Unknown error')+'. Your original files were not changed.','error');}
  finally{busy=false;render();if(el('message').textContent.startsWith('Done!')){el('createText').textContent='Create another .zhip archive';}}
@@ -245,7 +247,7 @@ async function readArchive(file){
   if(!window.fflate)throw new Error('Compression library is unavailable. Reload the page and try again.');
   const buffer=new Uint8Array(await file.arrayBuffer());
   if(buffer.length<9||buffer[0]!==90||buffer[1]!==72||buffer[2]!==73||buffer[3]!==80)throw new Error('Invalid ZHIP signature.');
-  if(buffer[4]!==1)throw new Error('Unsupported ZHIP version: '+buffer[4]);
+  const version=buffer[4];if(version!==1&&version!==2)throw new Error('Unsupported ZHIP version: '+version);
   const view=new DataView(buffer.buffer,buffer.byteOffset,buffer.byteLength);
   const count=view.getUint32(5,true);
   if(count>100000)throw new Error('Archive contains an unreasonable number of entries.');
@@ -254,12 +256,15 @@ async function readArchive(file){
   let totalExpanded=0;
   el('extractProgressFill').style.width='35%';
   for(let i=0;i<count;i++){
-   if(offset+14>buffer.length)throw new Error('Archive is truncated in an entry header.');
+   const fixedSize=version===1?14:15;
+   if(offset+fixedSize>buffer.length)throw new Error('Archive is truncated in an entry header.');
    const nameLength=view.getUint16(offset,true);
    const originalLength=view.getUint32(offset+2,true);
    const compressedLength=view.getUint32(offset+6,true);
    const expectedCrc=view.getUint32(offset+10,true);
-   offset+=14;
+   const codec=version===1?1:buffer[offset+14];
+   if(version===2&&codec!==0&&codec!==1)throw new Error('Unsupported compression codec: '+codec);
+   offset+=fixedSize;
    if(nameLength===0||offset+nameLength+compressedLength>buffer.length)throw new Error('Invalid entry lengths or truncated archive.');
    const name=new TextDecoder('utf-8',{fatal:true}).decode(buffer.subarray(offset,offset+nameLength));
    offset+=nameLength;
@@ -268,7 +273,7 @@ async function readArchive(file){
    offset+=compressedLength;
    totalExpanded+=originalLength;
    if(totalExpanded>2*1024*1024*1024)throw new Error('Expanded data exceeds the 2 GiB safety limit.');
-   const data=fflate.inflateSync(compressed);
+   const data=codec===0?compressed.slice():fflate.inflateSync(compressed);
    if(data.length!==originalLength)throw new Error('Size verification failed for '+name);
    if(crc32(data)!==expectedCrc)throw new Error('Integrity check failed for '+name);
    if(!name.endsWith('/'))entries.push({name,data});
