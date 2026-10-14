@@ -1,0 +1,18 @@
+[package]
+name = "zhiprar"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "zhipx"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "ZHiPRaR"
+path = "src/main.rs"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
