@@ -1,6 +1,10 @@
 (function(){
 'use strict';
-const MAX_BYTES=400*1024*1024;
+const BASE_MAX_BYTES=400*1024*1024;
+const PRO_MAX_BYTES=800*1024*1024;
+let proUnlocked=false;
+const isPro=()=>proUnlocked;
+const currentMaxBytes=()=>isPro()?PRO_MAX_BYTES:BASE_MAX_BYTES;
 const files=[];
 const el=id=>document.getElementById(id);
 const dropzone=el('dropzone'),fileInput=el('fileInput'),folderInput=el('folderInput'),fileList=el('fileList');
@@ -129,6 +133,10 @@ function addLog(target,message,type='info'){
 }
 function toast(text){const t=el('toast');t.textContent=text;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
 function totalSize(){return files.reduce((n,f)=>n+f.file.size,0);}
+function removeLocalCache(key){return openCacheDb().then(db=>new Promise((resolve,reject)=>{const tx=db.transaction('archives','readwrite');const request=key?tx.objectStore('archives').delete(key):tx.objectStore('archives').clear();tx.oncomplete=()=>{db.close();resolve();};tx.onerror=()=>{db.close();reject(tx.error);};})).catch(error=>console.warn('Cache cleanup failed',error));}
+async function clearCloudCache(key){try{await fetch(CACHE_API+'?key='+encodeURIComponent(key),{method:'DELETE',headers:{'X-Cache-Key':key}});}catch(error){console.warn('Cloud cache cleanup skipped',error);}}
+async function validateProCode(code){const response=await fetch(CACHE_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'validate-pro',code})});if(!response.ok)return false;const result=await response.json();return result.valid===true;}
+function syncProUi(){const max=currentMaxBytes();el('limitPill').textContent=isPro()?'PRO · 800 MB':'400 MB limit';el('proStatus').textContent=isPro()?'Pro unlocked · 800 MB':'Unlock up to 800 MB';el('sizeLabel').textContent=formatBytes(totalSize())+' / '+(isPro()?'800 MB':'400 MB');el('proCodeBtn').textContent=isPro()?'Pro unlocked ✓':'＋ Pro code';el('ultimateProNote').textContent=isPro()?'Pro enabled · strongest Zstandard mode':'Requires Pro code';}
 function render(){
  fileList.replaceChildren();
  if(!files.length){const empty=document.createElement('div');empty.className='empty-state';const ico=document.createElement('div');ico.className='empty-symbol';ico.textContent='＋';const copy=document.createElement('div');const strong=document.createElement('strong');strong.style.cssText='display:block;color:#b0bfd5;font-size:11px;margin-bottom:4px';strong.textContent='Your archive starts here';copy.append(strong,document.createTextNode('Choose one or more files to see them listed here.'));empty.append(ico,copy);fileList.append(empty);}
@@ -140,23 +148,23 @@ function render(){
   const remove=document.createElement('button');remove.type='button';remove.className='remove-file';remove.setAttribute('aria-label','Remove '+item.path);remove.textContent='×';remove.addEventListener('click',()=>{files.splice(index,1);render();clearMessage();});
   row.append(type,info,size,remove);fileList.append(row);
  });
- const total=totalSize(),over=total>MAX_BYTES;
+ const maxBytes=currentMaxBytes();const total=totalSize(),over=total>maxBytes;
  el('fileCount').textContent=files.length+' file'+(files.length===1?'':'s');
- el('sizeLabel').textContent=formatBytes(total)+' / 400 MB';
- el('sizeBar').style.width=Math.min(100,total/MAX_BYTES*100)+'%';
+ el('sizeLabel').textContent=formatBytes(total)+' / '+(isPro()?'800 MB':'400 MB');
+ el('sizeBar').style.width=Math.min(100,total/maxBytes*100)+'%';
  el('sizeBar').style.background=over?'var(--danger)':'linear-gradient(90deg,#7898ff,#70e0d0)';
  el('percentLabel').textContent=over?'Limit exceeded':files.length?Math.min(100,total/MAX_BYTES*100).toFixed(1)+'% of limit':'Ready when you are';
  el('createBtn').disabled=busy||!files.length||over||!window.fflate;
  el('createText').textContent=busy?'Creating your archive…':!window.fflate?'Compression library unavailable':'Create .zhip archive';
  el('clearBtn').disabled=busy;
- if(over){showMessage('Total input is '+formatBytes(total)+'. The 400 MB limit has been exceeded. Remove some files to continue.','error');}
+ if(over){showMessage('Total input is '+formatBytes(total)+'. The input limit has been exceeded. Remove some files or unlock Pro to continue.','error');}
 }
 function addFiles(list){
  clearMessage();let added=0,skipped=0;
  for(const file of list){
   const path=file.webkitRelativePath||file.name;
   if(files.some(x=>x.path===path)){skipped++;continue;}
-  if(totalSize()+file.size>MAX_BYTES){skipped++;continue;}
+  if(totalSize()+file.size>currentMaxBytes()){skipped++;continue;}
   files.push({file,path});added++;
  }
  render();
@@ -176,9 +184,11 @@ el('archiveName').addEventListener('input',()=>{el('archiveName').setCustomValid
 el('createBtn').addEventListener('click',async()=>{
  if(busy||!files.length)return;
  if(!window.fflate){showMessage('The compression library did not load. Check your internet connection and reload the page.','error');return;}
- const total=totalSize();if(total>MAX_BYTES){showMessage('The total input must not exceed 400 MB.','error');return;}
+ const total=totalSize();if(total>currentMaxBytes()){showMessage('The total input exceeds your current plan limit.','error');return;}
  const archiveName=safeName(el('archiveName').value);
- const compressionMode=el('compression').value; const compressionRuns=compressionMode==='fast'?[{level:1}]:compressionMode==='smart'?[{level:1},{level:6}]:[{level:1},{level:6},{level:9}];
+ const compressionMode=el('compression').value; const proJob=isPro()&&(total>BASE_MAX_BYTES||compressionMode==='ultimate'); const compressionRuns=compressionMode==='fast'?[{level:1}]:compressionMode==='smart'?[{level:1},{level:6}]:[{level:1},{level:6},{level:9}];
+ if(compressionMode==='ultimate'&&!isPro()){showMessage('Ultimate ZSTD requires a valid Pro code.','error');return;}
+ if(compressionMode==='ultimate'&&!window.confirm('WARNING: Ultimate ZSTD uses very high CPU and memory. The archive can take a long time, the browser may run out of memory, and codec or device issues may produce a damaged archive. Original files are not changed. Continue?'))return;
  busy=true;clearMessage();render();addLog('create','Started archive creation: '+files.length+' file(s), '+formatBytes(total)+'.');
  const button=el('createBtn'),original=el('createText');
  try{
