@@ -16,7 +16,11 @@
 - Optional ECDSA P-256 / SHA-256 digital signature and verification
 - Visible timestamped logs for compression and extraction progress, per-file results, and errors
 - Application JavaScript is separated into `app.js`
-- Client-side processing; selected file contents are not uploaded to an application server
+- Compression runs in a dedicated Web Worker so the page stays responsive during CPU-heavy work
+- Content-addressed CHC archive cache: IndexedDB on the current browser and optional shared Supabase Storage cache across devices
+- Cache entries expire after 48 hours; shared cache uploads are limited to 20 MiB, and only generated archive cache data is uploaded
+- Cache keys use SHA-256 hashes of file contents, paths, and compression mode to avoid reusing a cache for different inputs
+- Original selected files are processed locally; cloud cache stores only generated archive results
 
 ## ZHIP v3 binary format
 
