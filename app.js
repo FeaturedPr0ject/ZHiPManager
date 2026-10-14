@@ -85,7 +85,7 @@ el('createBtn').addEventListener('click',async()=>{
  if(!window.fflate){showMessage('The compression library did not load. Check your internet connection and reload the page.','error');return;}
  const total=totalSize();if(total>MAX_BYTES){showMessage('The total input must not exceed 400 MB.','error');return;}
  const archiveName=safeName(el('archiveName').value);
- const compressionMode=el('compression').value; const levels=compressionMode==='fast'?[1]:compressionMode==='9'?[9]:[1,6,9];
+ const compressionMode=el('compression').value; const compressionRuns=compressionMode==='fast'?[{level:1}]:compressionMode==='9'?[{level:9}]:compressionMode==='ultra'?[{level:9,mem:12},{level:9,mem:8},{level:8,mem:12}]:[{level:1},{level:6},{level:9}];
  busy=true;clearMessage();render();addLog('create','Started archive creation: '+files.length+' file(s), '+formatBytes(total)+'.');
  const button=el('createBtn'),original=el('createText');
  try{
@@ -116,13 +116,31 @@ el('createBtn').addEventListener('click',async()=>{
    if(nameBytes.length>65535)throw new Error('File path is too long: '+path);
    const raw=input[item.path.replace(/^\/+|^\.\//,'')]||input[path];
    let best=raw; let codec=0;
-   for(const candidateLevel of levels){const candidate=fflate.deflateSync(raw,{level:candidateLevel});if(candidate.length<best.length){best=candidate;codec=1;}}
+   const originalCrc=crc32(raw);
+   for(const compressionOptions of compressionRuns){
+    const candidate=fflate.deflateSync(raw,compressionOptions);
+    if(candidate.length>=best.length)continue;
+    if(compressionMode==='ultra'){
+     try{
+      const decoded=fflate.inflateSync(candidate);
+      if(decoded.length!==raw.length||crc32(decoded)!==originalCrc){
+       addLog('create','Rejected an Ultra DEFLATE result after integrity verification: '+path,'error');
+       continue;
+      }
+     }catch(error){
+      addLog('create','Rejected an Ultra DEFLATE result that failed verification: '+path,'error');
+      continue;
+     }
+    }
+    best=candidate;codec=1;
+   }
+   if(compressionMode==='ultra'&&codec===1)addLog('create','ULTRA DEFLATE round-trip integrity verified for '+path+'.','success');
    const record=new Uint8Array(15+nameBytes.length);
    const view=new DataView(record.buffer);
    view.setUint16(0,nameBytes.length,true);
    view.setUint32(2,raw.length,true);
    view.setUint32(6,best.length,true);
-   view.setUint32(10,crc32(raw),true);
+   view.setUint32(10,originalCrc,true);
    record[14]=codec;
    record.set(nameBytes,15);
    chunks.push(record,best);
