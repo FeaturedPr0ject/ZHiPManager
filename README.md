@@ -7,7 +7,8 @@
 - Responsive interface for desktop and mobile
 - Drag-and-drop or multi-file selection
 - Combined input limit of 400 MiB
-- Custom archive name with Fast, Smart hybrid, and Maximum DEFLATE modes
+- Custom archive name with Fast, Smart hybrid, Maximum DEFLATE, and ULTRA DEFLATE modes
+- ULTRA DEFLATE tests additional high-memory DEFLATE configurations, verifies compressed candidates with CRC-32, and may take substantially longer without guaranteeing a smaller output
 - Create and extract native ZHIP v3 archives; read existing v1 and v2 archives
 - Per-file hybrid selection: tests DEFLATE levels and keeps the smallest result; stores original bytes if compression would increase size
 - CRC-32 integrity checks
