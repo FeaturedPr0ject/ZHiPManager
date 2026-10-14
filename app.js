@@ -36,6 +36,45 @@ function addLog(target,message,type='info'){
 }
 let signingPrivateKey=null;
 let signingPublicKey=null;
+let signingKeysReady=false;
+function openKeyDatabase(){
+ return new Promise((resolve,reject)=>{
+  const request=indexedDB.open('ZHiPManagerKeys',1);
+  request.onupgradeneeded=()=>{if(!request.result.objectStoreNames.contains('signing'))request.result.createObjectStore('signing');};
+  request.onsuccess=()=>resolve(request.result);
+  request.onerror=()=>reject(request.error||new Error('Could not open the local signing-key store.'));
+ });
+}
+async function ensureSigningKeys(){
+ if(signingKeysReady&&signingPrivateKey&&signingPublicKey)return;
+ if(!crypto.subtle)throw new Error('Digital signatures require HTTPS or localhost.');
+ const db=await openKeyDatabase();
+ try{
+  const stored=await new Promise((resolve,reject)=>{
+   const request=db.transaction('signing','readonly').objectStore('signing').get('default');
+   request.onsuccess=()=>resolve(request.result||null);
+   request.onerror=()=>reject(request.error);
+  });
+  if(stored&&stored.privateKey&&stored.publicKey){
+   signingPrivateKey=stored.privateKey;
+   signingPublicKey=stored.publicKey;
+  }else{
+   const pair=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},false,['sign','verify']);
+   signingPrivateKey=pair.privateKey;
+   signingPublicKey=pair.publicKey;
+   await new Promise((resolve,reject)=>{
+    const transaction=db.transaction('signing','readwrite');
+    transaction.objectStore('signing').put({privateKey:pair.privateKey,publicKey:pair.publicKey},'default');
+    transaction.oncomplete=resolve;
+    transaction.onerror=()=>reject(transaction.error);
+    transaction.onabort=()=>reject(transaction.error||new Error('Could not save signing keys.'));
+   });
+  }
+  signingKeysReady=true;
+  if(el('signArchive'))el('signArchive').checked=true;
+  signatureStatus('Automatic digital signing is ready. The private key stays in this browser.','ready');
+ }finally{db.close();}
+}
 function bytesToBase64(bytes){let binary='';for(let i=0;i<bytes.length;i++)binary+=String.fromCharCode(bytes[i]);return btoa(binary);}
 function base64ToBytes(value){const binary=atob(value.replace(/\s/g,''));const bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);return bytes;}
 function pemBlock(label,bytes){const encoded=bytesToBase64(new Uint8Array(bytes));return '-----BEGIN '+label+'-----\n'+encoded.match(/.{1,64}/g).join('\n')+'\n-----END '+label+'-----\n';}
@@ -102,23 +141,8 @@ dropzone.addEventListener('dragover',e=>{e.preventDefault();dropzone.classList.a
 dropzone.addEventListener('dragleave',e=>{if(!dropzone.contains(e.relatedTarget))dropzone.classList.remove('dragover');});
 dropzone.addEventListener('drop',e=>{e.preventDefault();dropzone.classList.remove('dragover');if(e.dataTransfer.files)addFiles(Array.from(e.dataTransfer.files));});
 el('clearBtn').addEventListener('click',()=>{if(busy)return;files.splice(0);clearMessage();render();});
-el('generateKey').addEventListener('click',async()=>{
- try{
-  signatureStatus('Generating ECDSA P-256 keys…');
-  const pair=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);
-  signingPrivateKey=pair.privateKey;signingPublicKey=pair.publicKey;
-  const privateBytes=await crypto.subtle.exportKey('pkcs8',pair.privateKey);
-  const publicBytes=await crypto.subtle.exportKey('spki',pair.publicKey);
-  downloadText('zhip-private-key.pem',pemBlock('PRIVATE KEY',privateBytes));
-  downloadText('zhip-public-key.pem',pemBlock('PUBLIC KEY',publicBytes));
-  el('signArchive').checked=true;
-  signatureStatus('Signing keys ready. Keep zhip-private-key.pem secret and make a secure backup.','ready');
- }catch(error){signatureStatus('Key generation failed: '+error.message,'error');}
-});
-el('importKeyBtn').addEventListener('click',()=>el('privateKeyInput').click());
-el('privateKeyInput').addEventListener('change',async()=>{const file=el('privateKeyInput').files&&el('privateKeyInput').files[0];if(!file)return;try{await importPrivateKeyFile(file);el('signArchive').checked=true;}catch(error){signatureStatus('Could not import key: '+error.message,'error');}el('privateKeyInput').value='';});
-el('importPublicKeyBtn').addEventListener('click',()=>el('publicKeyInput').click());
-el('publicKeyInput').addEventListener('change',async()=>{const file=el('publicKeyInput').files&&el('publicKeyInput').files[0];if(!file)return;try{await importPublicKeyFile(file);}catch(error){signatureStatus('Could not import public key: '+error.message,'error');}el('publicKeyInput').value='';});
+el('signArchive').checked=true;
+ensureSigningKeys().catch(error=>signatureStatus('Automatic signing unavailable: '+error.message,'error'));
 el('archiveName').addEventListener('input',()=>{el('archiveName').setCustomValidity('');});
 el('createBtn').addEventListener('click',async()=>{
  if(busy||!files.length)return;
@@ -172,6 +196,7 @@ el('createBtn').addEventListener('click',async()=>{
   }
   let archiveParts=chunks;
   if(el('signArchive').checked){
+   await ensureSigningKeys();
    addLog('create','Signing archive with ECDSA P-256 / SHA-256.');
    if(!crypto.subtle)throw new Error('Digital signatures require a secure context such as HTTPS.');
    signatureStatus('Signing archive…');
@@ -195,6 +220,8 @@ el('createBtn').addEventListener('click',async()=>{
 
 const extractInput=el('extractInput'),extractDrop=el('extractDrop'),extractList=el('extractList');
 let extractedEntries=[];
+let currentArchiveName='MyArchive';
+const convertZipBtn=el('convertZipBtn');
 function clearExtract(){
  extractedEntries=[];extractInput.value='';extractList.replaceChildren();
  const empty=document.createElement('div');empty.className='empty-state';const icon=document.createElement('div');icon.className='empty-symbol';icon.textContent='↧';const copy=document.createElement('div');copy.textContent='Select a .zhip archive to view its contents.';empty.append(icon,copy);extractList.append(empty);
@@ -220,6 +247,8 @@ function downloadExtracted(entry){
  const blob=new Blob([entry.data],{type:'application/octet-stream'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=entry.name.split('/').pop()||'extracted-file';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
 }
 async function readArchive(file){
+ currentArchiveName=safeName(file.name.replace(/\.zhip$/i,'')||'ConvertedArchive');
+ convertZipBtn.classList.add('hidden');
  clearExtract();addLog('extract','Opening '+file.name+' ('+formatBytes(file.size)+').');
  el('extractSummary').textContent='Reading '+file.name+'…';
  el('extractProgress').classList.remove('hidden');el('extractProgressFill').style.width='20%';
@@ -278,6 +307,7 @@ async function readArchive(file){
   entries.sort((a,b)=>a.name.localeCompare(b.name));
   el('extractProgressFill').style.width='100%';
   renderExtracted(entries);
+  convertZipBtn.classList.toggle('hidden',entries.length===0);
   const bytes=entries.reduce((sum,item)=>sum+item.data.length,0);
   el('extractSummary').textContent=entries.length+' file(s) · '+formatBytes(bytes)+' extracted from '+file.name;
   const msg=el('extractMessage');msg.textContent=entries.length?'Archive opened successfully. Choose Download next to a file to save it.':'The archive contains no extractable files.';msg.className='message show '+(entries.length?'ok':'error');addLog('extract','Completed: '+entries.length+' file(s), '+formatBytes(bytes)+'.','success');
@@ -287,8 +317,27 @@ async function readArchive(file){
   extractList.replaceChildren();
  }finally{el('extractProgress').classList.add('hidden');}
 }
+convertZipBtn.addEventListener('click',()=>{
+ try{
+  if(!extractedEntries.length)throw new Error('Open a valid ZHIP archive first.');
+  const zipEntries={};
+  for(const entry of extractedEntries)zipEntries[entry.name]=entry.data;
+  const zipBytes=window.fflate.zipSync(zipEntries,{level:6});
+  const blob=new Blob([zipBytes],{type:'application/zip'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=currentArchiveName+'.zip';document.body.append(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),30000);
+  el('extractMessage').textContent='Converted '+extractedEntries.length+' file(s) from ZHIP to ZIP successfully.';
+  el('extractMessage').className='message show ok';
+  addLog('extract','Converted '+currentArchiveName+'.zhip to '+currentArchiveName+'.zip.','success');
+ }catch(error){
+  el('extractMessage').textContent='ZIP conversion failed: '+error.message;
+  el('extractMessage').className='message show error';
+  addLog('extract','ZIP conversion failed: '+error.message,'error');
+ }
+});
 el('extractChoose').addEventListener('click',()=>extractInput.click());
-el('extractClear').addEventListener('click',clearExtract);
+el('extractClear').addEventListener('click',()=>{clearExtract();convertZipBtn.classList.add('hidden');});
 extractInput.addEventListener('change',()=>{const file=extractInput.files&&extractInput.files[0];if(file)readArchive(file);});
 extractDrop.addEventListener('dragover',e=>{e.preventDefault();extractDrop.style.borderColor='#87a5ff';});
 extractDrop.addEventListener('dragleave',()=>{extractDrop.style.borderColor='';});
