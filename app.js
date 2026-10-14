@@ -268,5 +268,21 @@ extractDrop.addEventListener('dragover',e=>{e.preventDefault();extractDrop.style
 extractDrop.addEventListener('dragleave',()=>{extractDrop.style.borderColor='';});
 extractDrop.addEventListener('drop',e=>{e.preventDefault();extractDrop.style.borderColor='';const file=e.dataTransfer.files&&e.dataTransfer.files[0];if(file)readArchive(file);});
 
+
+const themeToggle=el('themeToggle'),themeLabel=el('themeLabel');
+function applyTheme(mode){
+ if(mode==='auto'){document.documentElement.removeAttribute('data-theme');themeLabel.textContent='Auto';}
+ else{document.documentElement.setAttribute('data-theme',mode);themeLabel.textContent=mode==='dark'?'Dark':'Light';}
+ themeToggle.setAttribute('aria-label','Current theme: '+(mode==='auto'?'system':mode)+'. Click to change theme.');
+ try{localStorage.setItem('zhipmanager-theme',mode);}catch(error){}
+}
+let themeMode='auto';
+try{const savedTheme=localStorage.getItem('zhipmanager-theme');if(['auto','light','dark'].includes(savedTheme))themeMode=savedTheme;}catch(error){}
+applyTheme(themeMode);
+themeToggle.addEventListener('click',()=>{
+ themeMode=themeMode==='auto'?'dark':themeMode==='dark'?'light':'auto';
+ applyTheme(themeMode);
+});
+
 render();
 })();
