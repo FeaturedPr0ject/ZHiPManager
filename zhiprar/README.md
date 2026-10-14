@@ -31,3 +31,6 @@ This is a codec prototype, not yet a replacement for ZSTD. It uses raw storage w
 The archive format in this folder is **ZHiP-X v1**, not the existing ZHiPManager v1-v4 container. Compatibility between the two formats has not been implemented yet. Keep test files and originals until integration and cross-version tests are complete.
 
 The DLL functions `zhipx_compress` and `zhipx_decompress` accept caller-provided buffers. If a buffer is too small, the function returns the negative required capacity; a null pointer or invalid archive returns -1.
+
+
+Windows build automation is defined in `.github/workflows/build-windows.yml`; successful runs publish `ZHiPRaR-Windows-x64.zip` as a workflow artifact.
