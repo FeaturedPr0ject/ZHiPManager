@@ -15,6 +15,22 @@ function crc32(data){
  for(let i=0;i<data.length;i++)value=table[(value^data[i])&0xff]^(value>>>8);
  return (value^0xffffffff)>>>0;
 }
+let zstdApi=null;
+let zstdLoadPromise=null;
+async function ensureZstd(){
+ if(zstdApi)return zstdApi;
+ if(!zstdLoadPromise){
+  zstdLoadPromise=(async()=>{
+   const module=await import('https://cdn.jsdelivr.net/npm/@bokuweb/zstd-wasm@0.0.27/+esm');
+   await module.init('https://cdn.jsdelivr.net/npm/@bokuweb/zstd-wasm@0.0.27/dist/web/zstd.wasm');
+   if(typeof module.compress!=='function'||typeof module.decompress!=='function')throw new Error('The Zstandard module did not expose compress/decompress functions.');
+   zstdApi={compress:module.compress,decompress:module.decompress};
+   return zstdApi;
+  })().catch(error=>{zstdLoadPromise=null;throw error;});
+ }
+ return zstdLoadPromise;
+}
+
 function formatBytes(bytes){
  if(bytes===0)return '0 B';
  const units=['B','KB','MB','GB'];const i=Math.min(Math.floor(Math.log(bytes)/Math.log(1024)),3);
@@ -85,10 +101,17 @@ el('createBtn').addEventListener('click',async()=>{
  if(!window.fflate){showMessage('The compression library did not load. Check your internet connection and reload the page.','error');return;}
  const total=totalSize();if(total>MAX_BYTES){showMessage('The total input must not exceed 400 MB.','error');return;}
  const archiveName=safeName(el('archiveName').value);
- const compressionMode=el('compression').value; const compressionRuns=compressionMode==='fast'?[{level:1}]:compressionMode==='9'?[{level:9}]:compressionMode==='ultra'?[{level:9,mem:12},{level:9,mem:8},{level:8,mem:12}]:[{level:1},{level:6},{level:9}];
+ const compressionMode=el('compression').value; const compressionRuns=compressionMode==='fast'?[{level:1}]:compressionMode==='9'?[{level:9}]:[{level:1},{level:6},{level:9}];
  busy=true;clearMessage();render();addLog('create','Started archive creation: '+files.length+' file(s), '+formatBytes(total)+'.');
  const button=el('createBtn'),original=el('createText');
  try{
+  let zstd=null;
+  if(compressionMode==='ultra'){
+   showMessage('Loading the Zstandard compression engine…','ok');
+   addLog('create','Loading Zstandard WebAssembly codec.');
+   zstd=await ensureZstd();
+   addLog('create','Zstandard is ready. ULTRA ZSTD uses compression level 19.');
+  }
   showMessage('Preparing files for compression…','ok');
   const input={};
   for(let i=0;i<files.length;i++){
@@ -104,7 +127,8 @@ el('createBtn').addEventListener('click',async()=>{
   const encoder=new TextEncoder();
   const chunks=[];
   const header=new Uint8Array(9);
-  header.set([90,72,73,80,2],0);
+  const archiveVersion=compressionMode==='ultra'?4:2;
+  header.set([90,72,73,80,archiveVersion],0);
   new DataView(header.buffer).setUint32(5,files.length,true);
   chunks.push(header);
   let archiveBytes=header.length;
@@ -117,24 +141,30 @@ el('createBtn').addEventListener('click',async()=>{
    const raw=input[item.path.replace(/^\/+|^\.\//,'')]||input[path];
    let best=raw; let codec=0;
    const originalCrc=crc32(raw);
-   for(const compressionOptions of compressionRuns){
-    const candidate=fflate.deflateSync(raw,compressionOptions);
-    if(candidate.length>=best.length)continue;
-    if(compressionMode==='ultra'){
+   if(compressionMode==='ultra'){
+    addLog('create','Compressing '+path+' with Zstandard level 19.');
+    const candidate=zstd.compress(raw,19);
+    if(candidate.length<best.length){
      try{
-      const decoded=fflate.inflateSync(candidate);
-      if(decoded.length!==raw.length||crc32(decoded)!==originalCrc){
-       addLog('create','Rejected an Ultra DEFLATE result after integrity verification: '+path,'error');
-       continue;
+      const decoded=zstd.decompress(candidate);
+      if(decoded.length===raw.length&&crc32(decoded)===originalCrc){
+       best=candidate;codec=2;
+       addLog('create','Zstandard round-trip CRC32 verification passed for '+path+'.','success');
+      }else{
+       addLog('create','Zstandard candidate failed size or CRC32 verification; storing original data for '+path+'.','error');
       }
      }catch(error){
-      addLog('create','Rejected an Ultra DEFLATE result that failed verification: '+path,'error');
-      continue;
+      addLog('create','Zstandard candidate could not be verified; storing original data for '+path+'.','error');
      }
+    }else{
+     addLog('create','Zstandard did not reduce '+path+'; storing original data.');
     }
-    best=candidate;codec=1;
+   }else{
+    for(const compressionOptions of compressionRuns){
+     const candidate=fflate.deflateSync(raw,compressionOptions);
+     if(candidate.length<best.length){best=candidate;codec=1;}
+    }
    }
-   if(compressionMode==='ultra'&&codec===1)addLog('create','ULTRA DEFLATE round-trip integrity verified for '+path+'.','success');
    const record=new Uint8Array(15+nameBytes.length);
    const view=new DataView(record.buffer);
    view.setUint16(0,nameBytes.length,true);
@@ -151,8 +181,8 @@ el('createBtn').addEventListener('click',async()=>{
   const blob=new Blob(chunks,{type:'application/vnd.zhip'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=archiveName+'.zhip';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
   const ratio=total?Math.max(0,(1-blob.size/total)*100):0;
-  showMessage('Done! '+archiveName+'.zhip was created ('+formatBytes(blob.size)+'). This archive uses the native ZHIP v2 hybrid container. It is not ZIP.','ok');
-  addLog('create','Created '+archiveName+'.zhip ('+formatBytes(blob.size)+').','success');
+  showMessage('Done! '+archiveName+'.zhip was created ('+formatBytes(blob.size)+'). This archive uses the native ZHIP v'+archiveVersion+' container. It is not ZIP.','ok');
+  addLog('create','Created '+archiveName+'.zhip (ZHIP v'+archiveVersion+', '+formatBytes(blob.size)+').','success');
   addLog('create',ratio>0?'Total size reduced by '+ratio.toFixed(1)+'%.':'No overall size reduction for this input.','info');
   toast('Your .zhip archive is ready');
  }catch(error){console.error(error);addLog('create','Failed: '+(error&&error.message?error.message:'Unknown error'),'error');showMessage('Could not create the archive: '+(error&&error.message?error.message:'Unknown error')+'. Your original files were not changed.','error');}
@@ -198,7 +228,7 @@ async function readArchive(file){
   if(!window.fflate)throw new Error('Compression library is unavailable. Reload the page and try again.');
   const buffer=new Uint8Array(await file.arrayBuffer());
   if(buffer.length<9||buffer[0]!==90||buffer[1]!==72||buffer[2]!==73||buffer[3]!==80)throw new Error('Invalid ZHIP signature.');
-  const version=buffer[4];if(version!==1&&version!==2&&version!==3)throw new Error('Unsupported ZHIP version: '+version);
+  const version=buffer[4];if(version!==1&&version!==2&&version!==3&&version!==4)throw new Error('Unsupported ZHIP version: '+version);
   const view=new DataView(buffer.buffer,buffer.byteOffset,buffer.byteLength);
   const count=view.getUint32(5,true);
   if(count>100000)throw new Error('Archive contains an unreasonable number of entries.');
@@ -214,7 +244,7 @@ async function readArchive(file){
    const compressedLength=view.getUint32(offset+6,true);
    const expectedCrc=view.getUint32(offset+10,true);
    const codec=version===1?1:buffer[offset+14];
-   if(version===2&&codec!==0&&codec!==1)throw new Error('Unsupported compression codec: '+codec);
+   if(codec!==0&&codec!==1&&!(version===4&&codec===2))throw new Error('Unsupported compression codec '+codec+' in ZHIP v'+version+'.');
    offset+=fixedSize;
    if(nameLength===0||offset+nameLength+compressedLength>buffer.length)throw new Error('Invalid entry lengths or truncated archive.');
    const name=new TextDecoder('utf-8',{fatal:true}).decode(buffer.subarray(offset,offset+nameLength));
@@ -224,7 +254,7 @@ async function readArchive(file){
    offset+=compressedLength;
    totalExpanded+=originalLength;
    if(totalExpanded>2*1024*1024*1024)throw new Error('Expanded data exceeds the 2 GiB safety limit.');
-   const data=codec===0?compressed.slice():fflate.inflateSync(compressed);
+   const data=codec===0?compressed.slice():codec===2?(await ensureZstd()).decompress(compressed):fflate.inflateSync(compressed);
    if(data.length!==originalLength)throw new Error('Size verification failed for '+name);
    if(crc32(data)!==expectedCrc)throw new Error('Integrity check failed for '+name);
    if(!name.endsWith('/')){entries.push({name,data});addLog('extract','Read '+name+' ('+formatBytes(data.length)+').');}
