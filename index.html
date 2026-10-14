@@ -105,5 +105,21 @@
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="app.js" defer></script>
+<div class="pro-modal-backdrop" id="proModal" hidden>
+ <section class="pro-modal" role="dialog" aria-modal="true" aria-labelledby="proModalTitle" aria-describedby="proModalDescription">
+  <button class="pro-modal-close" id="proModalClose" type="button" aria-label="Close dialog">×</button>
+  <div class="pro-modal-icon" aria-hidden="true">✦</div>
+  <div class="pro-modal-eyebrow">ZHiPManager · PRO</div>
+  <h2 id="proModalTitle">Unlock Pro</h2>
+  <p id="proModalDescription">Enter your Pro code to unlock 800 MB input and Ultimate ZSTD compression.</p>
+  <form id="proCodeForm">
+   <label for="proCodeInput">Pro activation code</label>
+   <input id="proCodeInput" name="proCode" type="password" autocomplete="off" spellcheck="false" placeholder="Enter your code" required>
+   <div class="pro-modal-error" id="proModalError" role="status" aria-live="polite"></div>
+   <div class="pro-modal-actions"><button class="secondary-btn" id="proModalCancel" type="button">Cancel</button><button class="primary-btn" id="proModalSubmit" type="submit">Unlock Pro</button></div>
+  </form>
+  <div class="pro-modal-footnote"><span>▣</span> Your code is verified securely by the server.</div>
+ </section>
+</div>
 </body>
 </html>
