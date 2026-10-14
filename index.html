@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#101827">
+<meta name="theme-color" content="#101827"><meta name="color-scheme" content="light dark">
 <meta name="description" content="ZHiPManager — create your ZHIP archive locally in your browser. Up to 400 MB total input.">
 <title>ZHiPManager — Your files, neatly packed</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,6 +18,37 @@
 .extract-card{margin:0 0 30px}.extract-content{padding:22px 24px 24px}.extract-drop{border:1.5px dashed #4c6390;background:linear-gradient(145deg,#24385d44,#16253a99);border-radius:15px;padding:23px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}.extract-drop .upload-icon{margin:0;width:48px;height:48px;flex:none}.extract-copy{flex:1;min-width:180px}.extract-copy strong{display:block;font:600 14px 'Space Grotesk';margin-bottom:6px}.extract-copy span{font-size:11px;color:var(--muted);line-height:1.6}.extract-actions{display:flex;gap:9px;flex-wrap:wrap}.secondary-btn{border:1px solid #354969;background:#1b2a43;color:#dce7ff;border-radius:10px;padding:11px 14px;font-size:11px;font-weight:700}.secondary-btn:hover{border-color:#819fff}.extract-summary{font-size:11px;color:var(--muted);margin:16px 0 10px}.extract-list{display:flex;flex-direction:column;gap:7px}.extract-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #ffffff0e;background:#ffffff04;border-radius:11px}.extract-item .file-name{flex:1}.extract-item a{color:#a9bcff;text-decoration:none;font-size:11px;font-weight:700}.extract-item a:hover{text-decoration:underline}.extract-hint{font-size:10px;color:#8da1bf;line-height:1.7;margin-top:12px}.activity-log{margin-top:16px;border:1px solid #ffffff0e;background:#0b1423;border-radius:12px;overflow:hidden}.activity-log-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;border-bottom:1px solid #ffffff0b}.activity-log-head strong{font-size:11px;color:#cbd8ee}.activity-log-head span{font-size:10px;color:#8194b2}.activity-log-list{padding:9px 12px;max-height:190px;overflow:auto;display:flex;flex-direction:column;gap:7px}.activity-entry{display:grid;grid-template-columns:55px minmax(0,1fr);gap:8px;font-size:10px;line-height:1.6;color:#9eafc9;overflow-wrap:anywhere}.activity-entry time{color:#6f85a6;font-variant-numeric:tabular-nums}.activity-entry.success span{color:#8be0d2}.activity-entry.error span{color:#ffabb5}.activity-entry.info span{color:#b8c8e3}.activity-empty{font-size:10px;color:#7185a3;padding:4px 1px}.signature-panel{margin-top:18px;padding:15px;background:#0b1423;border:1px solid #2a3b57;border-radius:12px}.signature-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.signature-head strong{display:block;font-size:12px;color:#e5edff}.signature-head span{display:block;font-size:10px;color:#8296b5;margin-top:4px}.signature-toggle{display:flex;align-items:center;gap:7px;font-size:11px;color:#cbd8ee;white-space:nowrap}.signature-toggle input{accent-color:#8da8ff}.signature-description{font-size:10px;line-height:1.7;color:#8ea1be;margin:11px 0}.signature-actions{display:flex;gap:8px;flex-wrap:wrap}.signature-actions .secondary-btn{padding:9px 11px}.signature-status{font-size:10px;color:#8da1be;margin-top:10px;overflow-wrap:anywhere}.signature-status.ready{color:#8be0d2}.signature-status.error{color:#ffabb5}.extract-progress{height:4px;background:#26344a;border-radius:10px;overflow:hidden;margin-top:12px}.extract-progress div{height:100%;width:0;background:linear-gradient(90deg,#7898ff,#70e0d0);transition:width .2s}
 
 .select-wrap{position:relative;display:inline-flex;align-items:center;min-width:112px;flex:none}.select-wrap select{appearance:none;-webkit-appearance:none;width:100%;min-width:0;border:1px solid #354969;background:#15243a;color:#dce7ff;border-radius:10px;padding:11px 32px 11px 12px;font:600 11px 'Space Grotesk',sans-serif;line-height:1.2;outline:none;cursor:pointer;box-shadow:inset 0 1px 0 #ffffff08;transition:border-color .2s,background .2s}.select-wrap select:hover{border-color:#718bc1;background:#192b45}.select-wrap select:focus-visible{border-color:#8eaaff;box-shadow:0 0 0 3px #7898ff24}.select-wrap:after{content:'';position:absolute;right:13px;top:50%;width:7px;height:7px;border-right:1.5px solid #a9bcff;border-bottom:1.5px solid #a9bcff;transform:translateY(-70%) rotate(45deg);pointer-events:none}.convert-card .extract-actions{align-items:center;gap:10px}.convert-card .secondary-btn{min-height:40px;display:inline-flex;align-items:center;justify-content:center;line-height:1.2;white-space:nowrap}.convert-card .extract-actions .select-wrap{min-width:130px}.convert-card .extract-actions .select-wrap select{min-height:40px}.convert-card select option{background:#15243a;color:#dce7ff}@media(max-width:650px){.convert-card .extract-actions{width:100%;justify-content:flex-start}.convert-card .extract-actions .select-wrap{flex:1;min-width:0;max-width:220px}}
+
+:root{color-scheme:light dark;--glass-blur:28px;--glass-saturate:185%;--glass-edge:rgba(255,255,255,.48);--glass-highlight:rgba(255,255,255,.32);--glass-shadow:0 24px 70px rgba(21,42,91,.16}
+:root,[data-theme="dark"]{--bg:#07101f;--panel:rgba(20,34,58,.58);--panel2:rgba(27,44,73,.52);--line:rgba(188,211,255,.22);--text:#f3f7ff;--muted:#aabbd6;--blue:#91aaff;--cyan:#85f0e3;--purple:#c0aaff;--danger:#ff9ba8;--shadow:0 24px 75px rgba(0,0,0,.34);--glass-edge:rgba(205,223,255,.3);--glass-highlight:rgba(255,255,255,.13)}
+[data-theme="light"]{color-scheme:light;--bg:#e8f0fb;--panel:rgba(255,255,255,.58);--panel2:rgba(255,255,255,.43);--line:rgba(81,111,163,.2);--text:#172744;--muted:#536987;--blue:#4c6fe0;--cyan:#087f91;--purple:#7955cb;--danger:#c43f60;--shadow:0 24px 70px rgba(62,91,145,.16);--glass-edge:rgba(255,255,255,.86);--glass-highlight:rgba(255,255,255,.68)}
+html{background:var(--bg);color-scheme:light dark}
+body{background:radial-gradient(ellipse at 8% 0%,rgba(103,151,255,.28),transparent 36%),radial-gradient(ellipse at 94% 12%,rgba(170,128,255,.25),transparent 33%),radial-gradient(ellipse at 45% 100%,rgba(74,211,207,.18),transparent 38%),var(--bg);background-attachment:fixed;color:var(--text);transition:background-color .3s,color .3s}
+.card,.side-card,.privacy,.activity-log,.meter,.name-wrap,.extract-drop,.empty-state,.file-row,.signature-panel,.local-pill,.limit-pill,.file-count,.format-badge,.stat-icon,.file-type,.empty-symbol{backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate));-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))}
+.card,.side-card{background:linear-gradient(145deg,var(--glass-highlight),transparent 34%),linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--glass-edge);box-shadow:inset 0 1px 0 rgba(255,255,255,.38),inset 0 -1px 0 rgba(255,255,255,.05),var(--shadow)}
+.card{border-radius:26px}
+.card-head{border-bottom:1px solid var(--line)}
+.side-card,.privacy{border-color:var(--glass-edge);box-shadow:inset 0 1px 0 rgba(255,255,255,.34),0 16px 42px rgba(14,31,65,.09)}
+.topbar{border-bottom-color:var(--line)}
+.brand-mark{box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 10px 32px rgba(103,132,255,.28)}
+.dropzone,.extract-drop{background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.025) 60%),linear-gradient(145deg,rgba(115,153,239,.11),rgba(80,210,207,.06));border-color:rgba(145,174,235,.52);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 -1px 0 rgba(255,255,255,.08)}
+.dropzone:hover,.dropzone:focus-visible,.dropzone.dragover{border-color:var(--blue);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 12px 36px rgba(100,139,245,.15)}
+.upload-icon,.stat-icon,.file-type,.empty-symbol{background:linear-gradient(145deg,rgba(255,255,255,.28),rgba(128,159,226,.08));border-color:var(--glass-edge);box-shadow:inset 0 1px 0 rgba(255,255,255,.42),0 8px 22px rgba(47,75,131,.1)}
+.choose-btn,.primary-btn{background:linear-gradient(120deg,#a7c0ff,#c0b2ff 54%,#8be9e0);box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 9px 28px rgba(99,129,242,.3)}
+.secondary-btn,.select-wrap select{background:linear-gradient(145deg,rgba(255,255,255,.18),rgba(255,255,255,.045)),var(--panel2);border-color:var(--glass-edge);color:var(--text);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 6px 18px rgba(24,44,82,.07);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%)}
+.secondary-btn:hover{border-color:var(--blue);filter:brightness(1.08)}
+.select-wrap select option{background:var(--bg);color:var(--text)}
+.name-wrap,.meter,.activity-log{background:linear-gradient(145deg,rgba(255,255,255,.11),rgba(255,255,255,.025)),var(--panel);border-color:var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.name-wrap input{color:var(--text)}
+.track{background:rgba(105,128,169,.24)}
+.extract-item{background:rgba(255,255,255,.06);border-color:var(--line)}
+.extract-hint,.drop-note,.file-meta,.meter-caption{color:var(--muted)!important}
+.local-pill,.limit-pill,.file-count,.format-badge{background:linear-gradient(145deg,rgba(255,255,255,.18),rgba(255,255,255,.04));border-color:var(--glass-edge)}
+.toast{backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);background:var(--panel);border-color:var(--glass-edge);color:var(--text)}
+.settings-row{gap:14px}
+.select-wrap select{min-height:40px}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]){color-scheme:light}}
+@media(prefers-reduced-transparency:reduce){.card,.side-card,.privacy,.activity-log,.meter,.name-wrap,.extract-drop,.empty-state,.file-row,.signature-panel,.local-pill,.limit-pill,.file-count,.format-badge,.stat-icon,.file-type,.empty-symbol,.secondary-btn,.select-wrap select{backdrop-filter:none;-webkit-backdrop-filter:none}}
 </style>
 </head>
 <body>
@@ -27,7 +58,7 @@
 <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="m4 7.5 8 4.7 8-4.7M12 12.2V21"/><path d="m9.5 5 8 4.5"/></svg></div>
 <div><div class="brand-name">ZHiP<span>Manager</span></div><div class="brand-sub">Zone Hybrid Improvement Plan</div></div>
 </a>
-<div class="top-right"><div class="local-pill"><span class="dot"></span> Local processing</div><div class="limit-pill">400 MB limit</div></div>
+<div class="top-right"><button class="theme-toggle secondary-btn" type="button" id="themeToggle" aria-label="Switch theme" title="Switch light/dark theme">◐ <span id="themeLabel">Auto</span></button><div class="local-pill"><span class="dot"></span> Local processing</div><div class="limit-pill">400 MB limit</div></div>
 </header>
 <section class="hero">
 <div class="eyebrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9z"/></svg> SIMPLE. PRIVATE. ORGANIZED.</div>
