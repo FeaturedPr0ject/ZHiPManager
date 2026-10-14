@@ -136,7 +136,7 @@ function totalSize(){return files.reduce((n,f)=>n+f.file.size,0);}
 function removeLocalCache(key){return openCacheDb().then(db=>new Promise((resolve,reject)=>{const tx=db.transaction('archives','readwrite');const request=key?tx.objectStore('archives').delete(key):tx.objectStore('archives').clear();tx.oncomplete=()=>{db.close();resolve();};tx.onerror=()=>{db.close();reject(tx.error);};})).catch(error=>console.warn('Cache cleanup failed',error));}
 async function clearCloudCache(key){try{await fetch(CACHE_API+'?key='+encodeURIComponent(key),{method:'DELETE',headers:{'X-Cache-Key':key}});}catch(error){console.warn('Cloud cache cleanup skipped',error);}}
 async function validateProCode(code){const response=await fetch(CACHE_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'validate-pro',code})});if(!response.ok)return false;const result=await response.json();return result.valid===true;}
-function syncProUi(){const max=currentMaxBytes();el('limitPill').textContent=isPro()?'PRO · 800 MB':'400 MB limit';el('proStatus').textContent=isPro()?'Pro unlocked · 800 MB':'Unlock up to 800 MB';el('sizeLabel').textContent=formatBytes(totalSize())+' / '+(isPro()?'800 MB':'400 MB');el('proCodeBtn').textContent=isPro()?'Pro unlocked ✓':'＋ Pro code';el('ultimateProNote').textContent=isPro()?'Pro enabled · strongest Zstandard mode':'Requires Pro code';}
+function syncProUi(){const max=currentMaxBytes();el('limitPill').textContent=isPro()?'PRO · 800 MB':'400 MB limit';el('proStatus').textContent=isPro()?'Pro unlocked · 800 MB':'Unlock up to 800 MB';el('sizeLabel').textContent=formatBytes(totalSize())+' / '+(isPro()?'800 MB':'400 MB');el('proCodeBtn').textContent=isPro()?'Pro unlocked ✓':'＋ Pro code';el('ultimateProNote').textContent=isPro()?'Pro enabled · strongest Zstandard mode':'Requires Pro code';el('maxLimitLabel').textContent=isPro()?'800 MB maximum':'400 MB maximum';}
 function render(){
  fileList.replaceChildren();
  if(!files.length){const empty=document.createElement('div');empty.className='empty-state';const ico=document.createElement('div');ico.className='empty-symbol';ico.textContent='＋';const copy=document.createElement('div');const strong=document.createElement('strong');strong.style.cssText='display:block;color:#b0bfd5;font-size:11px;margin-bottom:4px';strong.textContent='Your archive starts here';copy.append(strong,document.createTextNode('Choose one or more files to see them listed here.'));empty.append(ico,copy);fileList.append(empty);}
@@ -157,6 +157,7 @@ function render(){
  el('createBtn').disabled=busy||!files.length||over||!window.fflate;
  el('createText').textContent=busy?'Creating your archive…':!window.fflate?'Compression library unavailable':'Create .zhip archive';
  el('clearBtn').disabled=busy;
+ syncProUi();
  if(over){showMessage('Total input is '+formatBytes(total)+'. The input limit has been exceeded. Remove some files or unlock Pro to continue.','error');}
 }
 function addFiles(list){
@@ -188,7 +189,7 @@ el('createBtn').addEventListener('click',async()=>{
  const archiveName=safeName(el('archiveName').value);
  const compressionMode=el('compression').value; const proJob=isPro()&&(total>BASE_MAX_BYTES||compressionMode==='ultimate'); const compressionRuns=compressionMode==='fast'?[{level:1}]:compressionMode==='smart'?[{level:1},{level:6}]:[{level:1},{level:6},{level:9}];
  if(compressionMode==='ultimate'&&!isPro()){showMessage('Ultimate ZSTD requires a valid Pro code.','error');return;}
- if(compressionMode==='ultimate'&&!window.confirm('WARNING: Ultimate ZSTD uses very high CPU and memory. The archive can take a long time, the browser may run out of memory, and codec or device issues may produce a damaged archive. Original files are not changed. Continue?'))return;
+ if((compressionMode==='ultimate'||(isPro()&&total>BASE_MAX_BYTES))&&!window.confirm('WARNING: Ultimate ZSTD uses very high CPU and memory. The archive can take a long time, the browser may run out of memory, and codec or device issues may produce a damaged archive. Original files are not changed. Continue?'))return;
  busy=true;clearMessage();render();addLog('create','Started archive creation: '+files.length+' file(s), '+formatBytes(total)+'.');
  const button=el('createBtn'),original=el('createText');
  try{
@@ -493,6 +494,27 @@ document.addEventListener('focusin',event=>{
  if(!compressionPicker.contains(event.target))setCompressionMenu(false);
 });
 syncCompressionValue();
+
+el('proCodeBtn').addEventListener('click',async()=>{
+ if(isPro()){toast('Pro is already unlocked for this tab');return;}
+ const code=window.prompt('Enter your Pro code to unlock 800 MB and Ultimate ZSTD:');
+ if(code===null||!code.trim())return;
+ el('proCodeBtn').disabled=true;
+ try{
+  const valid=await validateProCode(code);
+  if(!valid){showMessage('Invalid Pro code. Please check the code and try again.','error');return;}
+  proUnlocked=true;
+  syncProUi();render();
+  showMessage('Pro unlocked for this tab: 800 MB and Ultimate ZSTD are now available.','ok');
+  addLog('create','Pro plan unlocked for this browser tab.','success');
+ }catch(error){showMessage('Could not validate the Pro code. Check your connection and try again.','error');}
+ finally{el('proCodeBtn').disabled=false;}
+});
+el('compression').addEventListener('change',()=>{
+ const mode=el('compression').value;
+ el('proWarning').classList.toggle('show',mode==='ultimate');
+ if(mode==='ultimate'&&!isPro()){showMessage('Ultimate ZSTD is a Pro feature. Enter your Pro code first.','error');el('compression').value='smart';syncCompressionValue();}
+});
 
 render();
 })();
