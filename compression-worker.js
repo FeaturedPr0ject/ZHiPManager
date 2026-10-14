@@ -45,26 +45,31 @@ self.onmessage=async event=>{
    const raw=new Uint8Array(buffer);
    let best=raw,codec=0,label='raw';
    const checksum=crc32(raw);
+   const benchmark=async(candidate,candidateCodec,candidateLabel,decode)=>{
+    try{
+     const decoded=decode(candidate);
+     if(decoded.length!==raw.length||crc32(decoded)!==checksum){
+      self.postMessage({type:'log',message:candidateLabel+' rejected: round-trip verification failed for '+path+'.'});
+      return;
+     }
+     self.postMessage({type:'log',message:candidateLabel+' benchmark: '+formatBytes(candidate.length)+' for '+path+' (verified).'});
+     if(candidate.length<best.length){best=candidate;codec=candidateCodec;label=candidateLabel;}
+    }catch(error){
+     self.postMessage({type:'log',message:candidateLabel+' rejected for '+path+': '+(error?.message||'verification failed')});
+    }
+   };
    for(const options of runs){
     const candidate=fflate.deflateSync(raw,options);
-    if(candidate.length<best.length){best=candidate;codec=1;label='DEFLATE level '+options.level;}
+    await benchmark(candidate,1,'DEFLATE level '+options.level,data=>fflate.inflateSync(data));
    }
    if(mode==='ultra'||mode==='ultimate'){
-    let zbest=null,zlevel=0;
     for(const level of [19,20,21,22]){
      try{
       const candidate=zstd.compress(raw,level);
-      if(!zbest||candidate.length<zbest.length){zbest=candidate;zlevel=level;}
-      self.postMessage({type:'log',message:'Zstandard level '+level+' produced '+formatBytes(candidate.length)+' for '+path+'.'});
+      await benchmark(candidate,2,'Zstandard level '+level,data=>zstd.decompress(data));
      }catch(error){
       self.postMessage({type:'log',message:'Zstandard level '+level+' failed for '+path+': '+(error?.message||'codec error')});
      }
-    }
-    if(zbest&&zbest.length<best.length){
-     try{
-      const decoded=zstd.decompress(zbest);
-      if(decoded.length===raw.length&&crc32(decoded)===checksum){best=zbest;codec=2;label='Zstandard level '+zlevel;}
-     }catch{}
     }
    }
    const record=new Uint8Array(15+name.length);
