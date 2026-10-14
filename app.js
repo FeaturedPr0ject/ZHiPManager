@@ -285,7 +285,7 @@ themeToggle.addEventListener('click',()=>{
 });
 
 
-const glassInteractiveNodes=document.querySelectorAll('.choose-btn,.primary-btn,.secondary-btn,.select-wrap select,.theme-toggle,.local-pill,.limit-pill');
+const glassInteractiveNodes=document.querySelectorAll('.choose-btn,.primary-btn,.secondary-btn,.select-wrap select,.theme-toggle,.local-pill,.limit-pill,.glass-select-trigger,.glass-select-option');
 glassInteractiveNodes.forEach(node=>{
  node.addEventListener('pointermove',event=>{
   const bounds=node.getBoundingClientRect();
@@ -310,6 +310,75 @@ jellyButtons.forEach(button=>{
   if(event.animationName==='jellyPress')button.classList.remove('jelly-trigger');
  });
 });
+
+
+const compressionPicker=el('compressionPicker');
+const compressionTrigger=el('compressionTrigger');
+const compressionLabel=el('compressionLabel');
+const compressionOptions=el('compressionOptions');
+const compressionSelect=el('compression');
+const compressionOptionButtons=Array.from(compressionOptions.querySelectorAll('[role="option"]'));
+function setCompressionMenu(open){
+ compressionPicker.classList.toggle('is-open',open);
+ compressionOptions.classList.toggle('hidden',!open);
+ compressionTrigger.setAttribute('aria-expanded',String(open));
+}
+function syncCompressionValue(){
+ const selected=compressionOptionButtons.find(option=>option.dataset.value===compressionSelect.value)||compressionOptionButtons[1];
+ compressionLabel.textContent=selected.querySelector('span').textContent;
+ compressionOptionButtons.forEach(option=>{
+  const isSelected=option===selected;
+  option.classList.toggle('is-selected',isSelected);
+  option.setAttribute('aria-selected',String(isSelected));
+ });
+}
+compressionTrigger.addEventListener('click',()=>{
+ const open=compressionTrigger.getAttribute('aria-expanded')!=='true';
+ setCompressionMenu(open);
+ if(open){
+  const selected=compressionOptionButtons.find(option=>option.dataset.value===compressionSelect.value);
+  (selected||compressionOptionButtons[0]).focus();
+ }
+});
+compressionOptionButtons.forEach((option,index)=>{
+ option.addEventListener('click',()=>{
+  compressionSelect.value=option.dataset.value;
+  compressionSelect.dispatchEvent(new Event('change',{bubbles:true}));
+  syncCompressionValue();
+  setCompressionMenu(false);
+  compressionTrigger.focus();
+ });
+ option.addEventListener('keydown',event=>{
+  let next=index;
+  if(event.key==='ArrowDown')next=(index+1)%compressionOptionButtons.length;
+  else if(event.key==='ArrowUp')next=(index-1+compressionOptionButtons.length)%compressionOptionButtons.length;
+  else if(event.key==='Home')next=0;
+  else if(event.key==='End')next=compressionOptionButtons.length-1;
+  else if(event.key==='Escape'){event.preventDefault();setCompressionMenu(false);compressionTrigger.focus();return;}
+  else if(event.key==='Tab'){setCompressionMenu(false);return;}
+  else return;
+  event.preventDefault();
+  compressionOptionButtons[next].focus();
+ });
+});
+compressionTrigger.addEventListener('keydown',event=>{
+ if(event.key==='ArrowDown'||event.key==='ArrowUp'){
+  event.preventDefault();
+  setCompressionMenu(true);
+  const selected=compressionOptionButtons.find(option=>option.dataset.value===compressionSelect.value);
+  const index=Math.max(0,compressionOptionButtons.indexOf(selected));
+  const next=event.key==='ArrowDown'?Math.min(index+1,compressionOptionButtons.length-1):Math.max(index-1,0);
+  compressionOptionButtons[next].focus();
+ }
+ if(event.key==='Escape')setCompressionMenu(false);
+});
+document.addEventListener('pointerdown',event=>{
+ if(!compressionPicker.contains(event.target))setCompressionMenu(false);
+});
+document.addEventListener('focusin',event=>{
+ if(!compressionPicker.contains(event.target))setCompressionMenu(false);
+});
+syncCompressionValue();
 
 render();
 })();
