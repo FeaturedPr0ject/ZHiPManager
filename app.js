@@ -298,7 +298,7 @@ glassInteractiveNodes.forEach(node=>{
  });
 });
 
-const jellyButtons=document.querySelectorAll('.choose-btn,.primary-btn,.secondary-btn,.theme-toggle');
+const jellyButtons=document.querySelectorAll('.choose-btn,.primary-btn,.secondary-btn,.theme-toggle,.glass-select-trigger,.glass-select-option');
 jellyButtons.forEach(button=>{
  button.addEventListener('click',()=>{
   if(button.disabled)return;
