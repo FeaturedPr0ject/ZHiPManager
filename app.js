@@ -34,68 +34,6 @@ function addLog(target,message,type='info'){
  while(list.children.length>100)list.firstElementChild.remove();
  count.textContent=list.children.length+' event'+(list.children.length===1?'':'s');
 }
-let signingPrivateKey=null;
-let signingPublicKey=null;
-let signingKeysReady=false;
-function openKeyDatabase(){
- return new Promise((resolve,reject)=>{
-  const request=indexedDB.open('ZHiPManagerKeys',1);
-  request.onupgradeneeded=()=>{if(!request.result.objectStoreNames.contains('signing'))request.result.createObjectStore('signing');};
-  request.onsuccess=()=>resolve(request.result);
-  request.onerror=()=>reject(request.error||new Error('Could not open the local signing-key store.'));
- });
-}
-async function ensureSigningKeys(){
- if(signingKeysReady&&signingPrivateKey&&signingPublicKey)return;
- if(!crypto.subtle)throw new Error('Digital signatures require HTTPS or localhost.');
- const db=await openKeyDatabase();
- try{
-  const stored=await new Promise((resolve,reject)=>{
-   const request=db.transaction('signing','readonly').objectStore('signing').get('default');
-   request.onsuccess=()=>resolve(request.result||null);
-   request.onerror=()=>reject(request.error);
-  });
-  if(stored&&stored.privateKey&&stored.publicKey){
-   signingPrivateKey=stored.privateKey;
-   signingPublicKey=stored.publicKey;
-  }else{
-   const pair=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},false,['sign','verify']);
-   signingPrivateKey=pair.privateKey;
-   signingPublicKey=pair.publicKey;
-   await new Promise((resolve,reject)=>{
-    const transaction=db.transaction('signing','readwrite');
-    transaction.objectStore('signing').put({privateKey:pair.privateKey,publicKey:pair.publicKey},'default');
-    transaction.oncomplete=resolve;
-    transaction.onerror=()=>reject(transaction.error);
-    transaction.onabort=()=>reject(transaction.error||new Error('Could not save signing keys.'));
-   });
-  }
-  signingKeysReady=true;
-  if(el('signArchive'))el('signArchive').checked=true;
-  signatureStatus('Automatic digital signing is ready. The private key stays in this browser.','ready');
- }finally{db.close();}
-}
-function bytesToBase64(bytes){let binary='';for(let i=0;i<bytes.length;i++)binary+=String.fromCharCode(bytes[i]);return btoa(binary);}
-function base64ToBytes(value){const binary=atob(value.replace(/\s/g,''));const bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);return bytes;}
-function pemBlock(label,bytes){const encoded=bytesToBase64(new Uint8Array(bytes));return '-----BEGIN '+label+'-----\n'+encoded.match(/.{1,64}/g).join('\n')+'\n-----END '+label+'-----\n';}
-function downloadText(name,text){const url=URL.createObjectURL(new Blob([text],{type:'application/x-pem-file'}));const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);}
-function signatureStatus(text,type=''){const status=el('signatureStatus');status.textContent=text;status.className='signature-status '+type;}
-function parsePem(text,label){const match=text.match(new RegExp('-----BEGIN '+label+'-----([\\s\\S]*?)-----END '+label+'-----'));if(!match)throw new Error('The selected file is not a valid '+label+' PEM key.');return base64ToBytes(match[1]);}
-async function importPrivateKeyFile(file){const bytes=parsePem(await file.text(),'PRIVATE KEY');signingPrivateKey=await crypto.subtle.importKey('pkcs8',bytes,{name:'ECDSA',namedCurve:'P-256'},false,['sign']);signatureStatus('Private key loaded. Import its matching public key too.','ready');}
-async function importPublicKeyFile(file){const bytes=parsePem(await file.text(),'PUBLIC KEY');signingPublicKey=await crypto.subtle.importKey('spki',bytes,{name:'ECDSA',namedCurve:'P-256'},true,['verify']);signatureStatus(signingPrivateKey?'Private and public keys loaded. Signing is ready.':'Public key loaded for verification.','ready');}
-async function signArchiveBytes(data){
- if(!signingPrivateKey||!signingPublicKey)throw new Error('To sign an archive, load a matching private and public key or generate a key pair.');
- const publicBytes=new Uint8Array(await crypto.subtle.exportKey('spki',signingPublicKey));
- const signature=new Uint8Array(await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},signingPrivateKey,data));
- const verified=await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},signingPublicKey,signature,data);
- if(!verified)throw new Error('The private and public keys do not match. Import a matching key pair.');
- const trailer=new Uint8Array(8+publicBytes.length+signature.length);
- trailer.set([83,73,71,90],0);
- const view=new DataView(trailer.buffer);
- view.setUint16(4,publicBytes.length,true);view.setUint16(6,signature.length,true);
- trailer.set(publicBytes,8);trailer.set(signature,8+publicBytes.length);
- return trailer;
-}
 function toast(text){const t=el('toast');t.textContent=text;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
 function totalSize(){return files.reduce((n,f)=>n+f.file.size,0);}
 function render(){
@@ -141,8 +79,6 @@ dropzone.addEventListener('dragover',e=>{e.preventDefault();dropzone.classList.a
 dropzone.addEventListener('dragleave',e=>{if(!dropzone.contains(e.relatedTarget))dropzone.classList.remove('dragover');});
 dropzone.addEventListener('drop',e=>{e.preventDefault();dropzone.classList.remove('dragover');if(e.dataTransfer.files)addFiles(Array.from(e.dataTransfer.files));});
 el('clearBtn').addEventListener('click',()=>{if(busy)return;files.splice(0);clearMessage();render();});
-el('signArchive').checked=true;
-ensureSigningKeys().catch(error=>signatureStatus('Automatic signing unavailable: '+error.message,'error'));
 el('archiveName').addEventListener('input',()=>{el('archiveName').setCustomValidity('');});
 el('createBtn').addEventListener('click',async()=>{
  if(busy||!files.length)return;
@@ -168,7 +104,7 @@ el('createBtn').addEventListener('click',async()=>{
   const encoder=new TextEncoder();
   const chunks=[];
   const header=new Uint8Array(9);
-  header.set([90,72,73,80,el('signArchive').checked?3:2],0);
+  header.set([90,72,73,80,2],0);
   new DataView(header.buffer).setUint32(5,files.length,true);
   chunks.push(header);
   let archiveBytes=header.length;
@@ -194,20 +130,7 @@ el('createBtn').addEventListener('click',async()=>{
    addLog('create','Processed '+path+': '+formatBytes(raw.length)+' → '+formatBytes(best.length)+'.');
    original.textContent='Compressing… '+Math.round((i+1)/files.length*100)+'%';
   }
-  let archiveParts=chunks;
-  if(el('signArchive').checked){
-   await ensureSigningKeys();
-   addLog('create','Signing archive with ECDSA P-256 / SHA-256.');
-   if(!crypto.subtle)throw new Error('Digital signatures require a secure context such as HTTPS.');
-   signatureStatus('Signing archive…');
-   const unsigned=new Blob(chunks,{type:'application/vnd.zhip'});
-   const unsignedBytes=new Uint8Array(await unsigned.arrayBuffer());
-   const trailer=await signArchiveBytes(unsignedBytes);
-   archiveParts=[unsignedBytes,trailer];
-   addLog('create','Digital signature attached.','success');
-   signatureStatus('Signature created. The public key is embedded for verification.','ready');
-  }
-  const blob=new Blob(archiveParts,{type:'application/vnd.zhip'});
+  const blob=new Blob(chunks,{type:'application/vnd.zhip'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=archiveName+'.zhip';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
   const ratio=total?Math.max(0,(1-blob.size/total)*100):0;
   showMessage('Done! '+archiveName+'.zhip was created ('+formatBytes(blob.size)+'). This archive uses the native ZHIP v2 hybrid container. It is not ZIP.','ok');
@@ -303,7 +226,7 @@ async function readArchive(file){
    if(!valid)throw new Error('Digital signature verification failed. The archive may have been changed.');
    const fingerprint=new Uint8Array(await crypto.subtle.digest('SHA-256',publicBytes));
    const fingerprintHex=Array.from(fingerprint,x=>x.toString(16).padStart(2,'0')).join('');
-   signatureStatus('Signature valid · key fingerprint SHA-256: '+fingerprintHex,'ready');
+   el('extractSummary').dataset.signature='valid';
   }else if(offset!==buffer.length)throw new Error('Unexpected trailing data after ZHIP entries.');
   entries.sort((a,b)=>a.name.localeCompare(b.name));
   el('extractProgressFill').style.width='100%';
