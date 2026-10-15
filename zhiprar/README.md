@@ -1,36 +1,34 @@
-# ZHiPRaR for Windows
+# ZHiPManager Native Windows App
 
-ZHiPRaR is a minimal Windows prototype with a JavaScript-friendly native Rust core.
-
-## Architecture
-
-- `ZHiPRaR.exe`: command-line pack, unpack and verify utility.
-- `zhipx.dll`: exported C ABI entry points for JavaScript/native integration.
-- `ZHiP-X`: experimental lossless codec with raw fallback and a small RLE token format.
-- `build.cmd`: builds the EXE and DLL for Windows x64.
+The `ZHiPRaR.exe` application is a native Windows GUI using the same `.zhip` container structure as the ZHiPManager web app.
 
 ## Build
 
-1. Install Rust using https://rustup.rs.
-2. Install the Visual Studio Build Tools C++ workload for the MSVC linker.
+1. Install Rust stable with target `x86_64-pc-windows-msvc`.
+2. Install Visual Studio Build Tools with the **Desktop development with C++** workload.
 3. Run `build.cmd`.
-4. Artifacts appear in `dist\`.
+4. Output files appear in `dist\`.
+
+The build script recognizes the custom Rust paths `E:\RustUp\.rustup` and `E:\RustUp\.cargo` if those directories exist.
 
 ## Usage
 
-```cmd
-ZHiPRaR.exe pack input.bin output.zhip
-ZHiPRaR.exe unpack output.zhip restored.bin
-ZHiPRaR.exe verify output.zhip
-```
+- **Choose files** selects multiple files at once.
+- **Choose folder** adds the selected folder's files using relative archive paths.
+- **Create .zhip archive** creates a web-compatible ZHIP v2 archive for DEFLATE modes or ZHIP v4 for ULTRA ZSTD.
+- **Choose archive** and **Output folder** prepare extraction. **Extract files** opens ZHIP v1–v4 archives and checks the CRC32 of every file.
+- ZHIP v3 archives also need a valid ECDSA signature.
+- Extraction blocks unsafe paths and refuses to overwrite existing files.
 
-## Important status
+## Compression modes
 
-This is a codec prototype, not yet a replacement for ZSTD. It uses raw storage when RLE does not reduce size and verifies restored bytes with CRC32. It is expected to perform poorly on already-compressed images, video and audio. No lossless codec can guarantee reducing every such file by 50%.
+- Fast: DEFLATE level 1 plus raw fallback.
+- Smart hybrid: compare DEFLATE levels 1 and 6 with raw storage.
+- Maximum DEFLATE: compare levels 1, 6 and 9 with raw storage.
+- ULTRA ZSTD: compare DEFLATE levels 1/6/9, Zstandard levels 19–22 and raw storage.
 
-The archive format in this folder is **ZHiP-X v1**, not the existing ZHiPManager v1-v4 container. Compatibility between the two formats has not been implemented yet. Keep test files and originals until integration and cross-version tests are complete.
+All candidates are round-trip checked before selection. Combined input is limited to 400 MB. Processing is local; the app does not upload selected files.
 
-The DLL functions `zhipx_compress` and `zhipx_decompress` accept caller-provided buffers. If a buffer is too small, the function returns the negative required capacity; a null pointer or invalid archive returns -1.
+## DLL
 
-
-Windows build automation is defined in `.github/workflows/build-windows.yml`; successful runs publish `ZHiPRaR-Windows-x64.zip` as a workflow artifact.
+`zhipx.dll` retains the small single-file C ABI wrapper for native integration. The GUI uses the archive APIs directly. The Windows x64 workflow runs the codec tests and publishes `ZHiPRaR-Windows-x64.zip` as an artifact.
