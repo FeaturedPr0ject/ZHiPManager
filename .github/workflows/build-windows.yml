@@ -1,0 +1,41 @@
+name: Build ZHiPRaR Windows
+
+on:
+  push:
+    branches: [windows-zhiprar]
+    paths:
+      - "zhiprar/**"
+      - ".github/workflows/build-windows.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+      - name: Test codec
+        working-directory: zhiprar
+        run: cargo test --target x86_64-pc-windows-msvc
+      - name: Build release
+        working-directory: zhiprar
+        run: cargo build --release --target x86_64-pc-windows-msvc
+      - name: Package EXE and DLL
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force zhiprar/dist | Out-Null
+          Copy-Item zhiprar/target/x86_64-pc-windows-msvc/release/ZHiPRaR.exe zhiprar/dist/
+          Copy-Item zhiprar/target/x86_64-pc-windows-msvc/release/zhipx.dll zhiprar/dist/
+          Copy-Item zhiprar/README.md zhiprar/dist/README.txt
+          Compress-Archive -Path zhiprar/dist/* -DestinationPath zhiprar/ZHiPRaR-Windows-x64.zip -Force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ZHiPRaR-Windows-x64
+          path: zhiprar/ZHiPRaR-Windows-x64.zip
+          if-no-files-found: error
+          retention-days: 30
