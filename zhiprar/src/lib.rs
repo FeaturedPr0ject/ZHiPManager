@@ -387,7 +387,7 @@ mod tests {
     use super::{compress_archive, decompress_archive, ArchiveEntry, CompressionMode};
 
     fn files() -> Vec<ArchiveEntry> {
-        vec![
+        let mut items = vec![
             ArchiveEntry {
                 path: "notes.txt".into(),
                 data: b"ZHiPManager archive compatibility test".repeat(30),
@@ -396,7 +396,9 @@ mod tests {
                 path: "images/sample.bin".into(),
                 data: (0u8..=255).cycle().take(4096).collect(),
             },
-        ]
+        ];
+        items.sort_by(|left, right| left.path.cmp(&right.path));
+        items
     }
 
     #[test]
