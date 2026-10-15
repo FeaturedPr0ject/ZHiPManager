@@ -390,7 +390,7 @@ impl ZhiprarApp {
         ui.horizontal(|ui| {
             ui.label(RichText::new("SELECTED FILES").size(11.0).strong().color(Color32::from_rgb(190, 205, 230)));
             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                if ui.add_enabled(!self.busy, egui::Button::new(RichText::new("Clear all").color(Color32::from_rgb(255, 155, 170))).fill(Color32::from_rgb(27, 42, 68)).stroke(Stroke::new(1.0, Color32::from_rgb(53, 74, 112))).corner_radius(CornerRadius::same(8))).clicked() {
+                if ui.add_enabled(!self.busy, egui::Button::new(RichText::new("Clear all").color(Color32::from_rgb(255, 155, 170))).fill(Color32::from_rgb(27, 42, 68)).stroke(Stroke::new(1.0_f32, Color32::from_rgb(53, 74, 112))).corner_radius(CornerRadius::same(8))).clicked() {
                     self.clear_files();
                 }
                 ui.label(
@@ -405,7 +405,7 @@ impl ZhiprarApp {
         if self.files.is_empty() {
             Frame::new()
                 .fill(Color32::from_rgb(14, 23, 40))
-                .stroke(Stroke::new(1.0, Color32::from_rgb(38, 54, 80)))
+                .stroke(Stroke::new(1.0_f32, Color32::from_rgb(38, 54, 80)))
                 .corner_radius(CornerRadius::same(12))
                 .inner_margin(Margin::same(16))
                 .show(ui, |ui| {
@@ -423,7 +423,7 @@ impl ZhiprarApp {
                 for (index, item) in self.files.iter().enumerate() {
                     Frame::new()
                         .fill(Color32::from_rgb(21, 32, 52))
-                        .stroke(Stroke::new(1.0, Color32::from_rgb(39, 56, 82)))
+                        .stroke(Stroke::new(1.0_f32, Color32::from_rgb(39, 56, 82)))
                         .corner_radius(CornerRadius::same(10))
                         .inner_margin(Margin::symmetric(10, 8))
                         .show(ui, |ui| {
@@ -435,7 +435,7 @@ impl ZhiprarApp {
                                     ui.label(RichText::new(format!("{} · Local file", size)).size(10.0).color(Color32::from_rgb(135, 153, 181)));
                                 });
                                 ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                                    if ui.add_enabled(!self.busy, egui::Button::new(RichText::new("X").size(18.0).color(Color32::from_rgb(255, 155, 170))).fill(Color32::from_rgb(27, 42, 68)).stroke(Stroke::new(1.0, Color32::from_rgb(53, 74, 112))).corner_radius(CornerRadius::same(8))).clicked() {
+                                    if ui.add_enabled(!self.busy, egui::Button::new(RichText::new("X").size(18.0).color(Color32::from_rgb(255, 155, 170))).fill(Color32::from_rgb(27, 42, 68)).stroke(Stroke::new(1.0_f32, Color32::from_rgb(53, 74, 112))).corner_radius(CornerRadius::same(8))).clicked() {
                                         remove_index = Some(index);
                                     }
                                 });
@@ -451,10 +451,10 @@ impl ZhiprarApp {
 
         ui.add_space(12.0);
         ui.horizontal_wrapped(|ui| {
-            if ui.add_enabled(!self.busy, egui::Button::new("Add files").fill(Color32::from_rgb(27, 42, 68)).stroke(Stroke::new(1.0, Color32::from_rgb(53, 74, 112))).corner_radius(CornerRadius::same(8))).clicked() {
+            if ui.add_enabled(!self.busy, egui::Button::new("Add files").fill(Color32::from_rgb(27, 42, 68)).stroke(Stroke::new(1.0_f32, Color32::from_rgb(53, 74, 112))).corner_radius(CornerRadius::same(8))).clicked() {
                 self.add_files();
             }
-            if ui.add_enabled(!self.busy, egui::Button::new("Add folder").fill(Color32::from_rgb(27, 42, 68)).stroke(Stroke::new(1.0, Color32::from_rgb(53, 74, 112))).corner_radius(CornerRadius::same(8))).clicked() {
+            if ui.add_enabled(!self.busy, egui::Button::new("Add folder").fill(Color32::from_rgb(27, 42, 68)).stroke(Stroke::new(1.0_f32, Color32::from_rgb(53, 74, 112))).corner_radius(CornerRadius::same(8))).clicked() {
                 self.add_folder();
             }
         });
@@ -508,7 +508,7 @@ impl ZhiprarApp {
         let ratio = (total as f32 / max_size as f32).clamp(0.0, 1.0);
         Frame::new()
             .fill(Color32::from_rgb(13, 21, 36))
-            .stroke(Stroke::new(1.0, Color32::from_rgb(38, 54, 80)))
+            .stroke(Stroke::new(1.0_f32, Color32::from_rgb(38, 54, 80)))
             .corner_radius(CornerRadius::same(12))
             .inner_margin(Margin::same(12))
             .show(ui, |ui| {
@@ -524,7 +524,7 @@ impl ZhiprarApp {
             });
 
         ui.add_space(10.0);
-        if ui.add_enabled(!self.busy && !self.files.is_empty() && total <= max_size, egui::Button::new(RichText::new(if self.busy { "Working…" } else { "Create .zhip archive" }).strong()).fill(Color32::from_rgb(27, 42, 68)).stroke(Stroke::new(1.0, Color32::from_rgb(53, 74, 112))).corner_radius(CornerRadius::same(8)).min_size(Vec2::new(ui.available_width(), 44.0))).clicked() {
+        if ui.add_enabled(!self.busy && !self.files.is_empty() && total <= max_size, egui::Button::new(RichText::new(if self.busy { "Working…" } else { "Create .zhip archive" }).strong()).fill(Color32::from_rgb(27, 42, 68)).stroke(Stroke::new(1.0_f32, Color32::from_rgb(53, 74, 112))).corner_radius(CornerRadius::same(8)).min_size(Vec2::new(ui.available_width(), 44.0))).clicked() {
             self.start_compress();
         }
     }
@@ -550,7 +550,7 @@ impl ZhiprarApp {
         ui.add_space(12.0);
         Frame::new()
             .fill(Color32::from_rgb(19, 39, 48))
-            .stroke(Stroke::new(1.0, Color32::from_rgb(43, 83, 89)))
+            .stroke(Stroke::new(1.0_f32, Color32::from_rgb(43, 83, 89)))
             .corner_radius(CornerRadius::same(16))
             .inner_margin(Margin::same(14))
             .show(ui, |ui| {
@@ -566,13 +566,13 @@ impl ZhiprarApp {
             ui.add_space(12.0);
 
             ui.horizontal_wrapped(|ui| {
-                if ui.add_enabled(!self.busy, egui::Button::new("Choose archive…").fill(Color32::from_rgb(27, 42, 68)).stroke(Stroke::new(1.0, Color32::from_rgb(53, 74, 112))).corner_radius(CornerRadius::same(8))).clicked() {
+                if ui.add_enabled(!self.busy, egui::Button::new("Choose archive…").fill(Color32::from_rgb(27, 42, 68)).stroke(Stroke::new(1.0_f32, Color32::from_rgb(53, 74, 112))).corner_radius(CornerRadius::same(8))).clicked() {
                     self.choose_archive();
                 }
-                if ui.add_enabled(!self.busy, egui::Button::new("Output folder…").fill(Color32::from_rgb(27, 42, 68)).stroke(Stroke::new(1.0, Color32::from_rgb(53, 74, 112))).corner_radius(CornerRadius::same(8))).clicked() {
+                if ui.add_enabled(!self.busy, egui::Button::new("Output folder…").fill(Color32::from_rgb(27, 42, 68)).stroke(Stroke::new(1.0_f32, Color32::from_rgb(53, 74, 112))).corner_radius(CornerRadius::same(8))).clicked() {
                     self.choose_extract_directory();
                 }
-                if ui.add_enabled(!self.busy && self.archive_to_extract.is_some() && self.extract_directory.is_some(), egui::Button::new(RichText::new("Extract files").strong()).fill(Color32::from_rgb(27, 42, 68)).stroke(Stroke::new(1.0, Color32::from_rgb(53, 74, 112))).corner_radius(CornerRadius::same(8))).clicked() {
+                if ui.add_enabled(!self.busy && self.archive_to_extract.is_some() && self.extract_directory.is_some(), egui::Button::new(RichText::new("Extract files").strong()).fill(Color32::from_rgb(27, 42, 68)).stroke(Stroke::new(1.0_f32, Color32::from_rgb(53, 74, 112))).corner_radius(CornerRadius::same(8))).clicked() {
                     self.start_extract();
                 }
             });
@@ -580,7 +580,7 @@ impl ZhiprarApp {
             ui.add_space(10.0);
             Frame::new()
                 .fill(Color32::from_rgb(13, 21, 36))
-                .stroke(Stroke::new(1.0, Color32::from_rgb(38, 54, 80)))
+                .stroke(Stroke::new(1.0_f32, Color32::from_rgb(38, 54, 80)))
                 .corner_radius(CornerRadius::same(11))
                 .inner_margin(Margin::same(12))
                 .show(ui, |ui| {
@@ -621,7 +621,7 @@ impl eframe::App for ZhiprarApp {
                         ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                             Frame::new()
                                 .fill(Color32::from_rgb(17, 29, 45))
-                                .stroke(Stroke::new(1.0, Color32::from_rgb(43, 62, 88)))
+                                .stroke(Stroke::new(1.0_f32, Color32::from_rgb(43, 62, 88)))
                                 .corner_radius(CornerRadius::same(20))
                                 .inner_margin(Margin::symmetric(11, 7))
                                 .show(ui, |ui| {
@@ -671,7 +671,7 @@ fn card(
 ) {
     Frame::new()
         .fill(Color32::from_rgb(17, 27, 46))
-        .stroke(Stroke::new(1.0, Color32::from_rgb(38, 54, 80)))
+        .stroke(Stroke::new(1.0_f32, Color32::from_rgb(38, 54, 80)))
         .corner_radius(CornerRadius::same(17))
         .inner_margin(Margin::same(15))
         .show(ui, |ui| {
@@ -856,11 +856,9 @@ fn main() -> eframe::Result<()> {
             visuals.widgets.inactive.bg_fill = Color32::from_rgb(27, 42, 68);
             visuals.widgets.hovered.bg_fill = Color32::from_rgb(53, 70, 109);
             visuals.widgets.active.bg_fill = Color32::from_rgb(91, 125, 230);
-            visuals.widgets.disabled.bg_fill = Color32::from_rgb(16, 24, 39);
-            visuals.widgets.disabled.fg_stroke.color = Color32::from_rgb(102, 119, 148);
-            visuals.widgets.inactive.bg_stroke = Stroke::new(1.0, Color32::from_rgb(53, 74, 112));
-            visuals.widgets.hovered.bg_stroke = Stroke::new(1.0, Color32::from_rgb(112, 146, 255));
-            visuals.widgets.active.bg_stroke = Stroke::new(1.0, Color32::from_rgb(130, 158, 255));
+            visuals.widgets.inactive.bg_stroke = Stroke::new(1.0_f32, Color32::from_rgb(53, 74, 112));
+            visuals.widgets.hovered.bg_stroke = Stroke::new(1.0_f32, Color32::from_rgb(112, 146, 255));
+            visuals.widgets.active.bg_stroke = Stroke::new(1.0_f32, Color32::from_rgb(130, 158, 255));
             visuals.widgets.inactive.corner_radius = CornerRadius::same(8);
             visuals.widgets.hovered.corner_radius = CornerRadius::same(8);
             visuals.widgets.active.corner_radius = CornerRadius::same(8);
